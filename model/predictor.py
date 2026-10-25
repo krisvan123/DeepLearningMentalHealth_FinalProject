@@ -83,13 +83,9 @@ class Predictor:
                 len(probs),
                 num_labels,
             )
-            # Safe truncation or padding
-            if len(probs) > num_labels:
-                probs = probs[:num_labels]
-            else:
-                padded_probs = np.zeros(num_labels, dtype=np.float32)
-                padded_probs[: len(probs)] = probs
-                probs = padded_probs
+            raise ValueError("Model output dimension does not match class-label mapping.")
+        if not np.all(np.isfinite(probs)):
+            raise ValueError("Model produced non-finite probabilities.")
 
         max_idx = int(np.argmax(probs))
         raw_class = labels[max_idx]
@@ -97,7 +93,7 @@ class Predictor:
 
         # 5. OOD Check (Out of Distribution)
         # If confidence is lower than threshold and OOD class exists in labels
-        is_ood = False
+        is_ood = raw_class == "OOD"
         threshold = self.config.confidence_threshold
         if confidence < threshold and "OOD" in labels:
             predicted_class = "OOD"
