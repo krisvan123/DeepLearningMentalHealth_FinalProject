@@ -34,7 +34,7 @@ export const ModelStatus: React.FC<ModelStatusProps> = ({ status }) => {
       <div className="flex justify-between items-baseline text-xs pb-1.5 border-b border-mono-200">
         <span className="text-mono-500">Inference</span>
         <span className="font-semibold text-mono-900 text-right">
-          {status?.model_ready ? "Deep Learning API" : "Offline"}
+          {status?.model_ready ? "On-device TensorFlow.js" : "Model not loaded"}
         </span>
       </div>
       <div className="flex justify-between items-baseline text-xs pb-1.5 border-b border-mono-200">
