@@ -7,7 +7,7 @@
  */
 import type { ChatResponse, ChatTurn, ModelStatus } from "./types";
 import { recognizeSocialOpening, socialOpeningReply } from "./conversation-intents";
-import { createGuidedSupport, generalSupportForClass } from "./guided-support";
+import { createGuidedSupport, generalSupportForClass, positiveCheckinReply } from "./guided-support";
 import type * as TF from "@tensorflow/tfjs";
 
 type RuntimeConfig = {
@@ -194,6 +194,18 @@ export async function sendBrowserMessage(
     return {
       response: socialAnswer,
       predicted_class: "Greeting", response_source: "social",
+      is_high_risk: false,
+      is_ood: false,
+    };
+  }
+
+  const positiveReply = positiveCheckinReply(message);
+  if (positiveReply) {
+    return {
+      response: positiveReply,
+      response_source: "social",
+      support_topic: "Positive check-in",
+      predicted_class: "Neutral",
       is_high_risk: false,
       is_ood: false,
     };
