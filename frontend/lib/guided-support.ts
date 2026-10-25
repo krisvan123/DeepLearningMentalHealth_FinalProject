@@ -273,6 +273,17 @@ export function createGuidedSupport(
     questionForHelp.test(current);
   let topic = directlyRelevant ? TOPICS.find((item) => item.match.test(current)) : undefined;
 
+  // Mentioning ordinary activities alone is not evidence of distress. Do
+  // not turn "I like food" or "I slept well" into an unsolicited intervention.
+  if (topic?.key === "food" &&
+      !/\b(guilty|guilt|worried|worry|anxious|scared|afraid|restrict|struggling|shame|body image|kalori|salah|bersalah|takut|cemas|khawatir|susah|kesulitan|ganggu|masalah)\b/i.test(current)) {
+    topic = undefined;
+  }
+  if (topic?.key === "sleep" &&
+      !/\b(cannot|can't|couldn't|hard|difficult|struggl|bad|poor|worry|anxious|problem|insomnia|susah|tidak|gak|nggak|enggak|sulit|sering bangun|bangun terus|ganggu|masalah|begadang)\b/i.test(current)) {
+    topic = undefined;
+  }
+
   // Use the previous user topic only for short, recognisable follow-ups.
   // A brand-new topic must never be contaminated by an old conversation.
   const previous = [...history].reverse().find((item) => item.role === "user")?.content || "";
