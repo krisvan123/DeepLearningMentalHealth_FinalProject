@@ -35,6 +35,7 @@ from response.response_manager import ResponseManager
 from utils.helpers import check_system_status, validate_user_input
 from utils.logging_utils import get_logger
 from utils.safety import needs_crisis_support
+from utils.intent_router import infer_simple_indonesian_theme
 
 logger = get_logger(__name__)
 
@@ -123,15 +124,17 @@ def chat_endpoint(payload: ChatRequest):
 
     clean_text = validation_result
 
+    # Independent safety routing must work even when inference is offline.
+    if needs_crisis_support(clean_text):
+        mapped = _response_manager.get_response(
+            "Suicide", user_message=clean_text
+        )
+        return ChatResponse(
+            response=mapped["text"], predicted_class="Suicide",
+            is_high_risk=True, is_ood=False, safety_override=True
+        )
+
     if not _predictor.is_ready:
-        if needs_crisis_support(clean_text):
-            mapped = _response_manager.get_response(
-                "Suicide", user_message=clean_text
-            )
-            return ChatResponse(
-                response=mapped["text"], predicted_class="Suicide",
-                is_high_risk=True, is_ood=False, safety_override=True
-            )
         return ChatResponse(
             response="The inference model is currently unavailable. Please try again later.",
             predicted_class="Unavailable", is_ood=False,
@@ -151,9 +154,11 @@ def chat_endpoint(payload: ChatRequest):
         if previous and len(clean_text.split()) <= 8:
             inference_text = previous + " " + clean_text
         pred_result = _predictor.predict(inference_text)
-        safety_override = needs_crisis_support(clean_text)
-        predicted_class = "Suicide" if safety_override else pred_result["predicted_class"]
-        confidence = None if safety_override else pred_result["confidence"]
+        language_theme = infer_simple_indonesian_theme(clean_text)
+        # Rule-routed messages are explicitly unscored: never misrepresent a
+        # heuristic theme as a calibrated neural-network confidence.
+        predicted_class = language_theme or pred_result["predicted_class"]
+        confidence = None if language_theme else pred_result["confidence"]
 
         mapped = _response_manager.get_response(
             predicted_class=predicted_class,
@@ -168,8 +173,8 @@ def chat_endpoint(payload: ChatRequest):
             predicted_class=predicted_class,
             confidence=confidence,
             is_high_risk=mapped["is_high_risk"],
-            is_ood=False if safety_override else pred_result["is_ood"],
-            safety_override=safety_override,
+            is_ood=pred_result["is_ood"] if not language_theme else False,
+            safety_override=False,
             latency_ms=pred_result["latency_ms"],
             probabilities=pred_result["probabilities"],
         )
