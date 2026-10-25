@@ -62,7 +62,11 @@ export default function Home() {
         .reverse()
         .find((m) => m.role === "assistant")?.content;
 
-      const result = await sendMessage(userText, lastAssistant);
+      const history = messages.slice(-8).map((m) => ({
+        role: m.role,
+        content: m.content.slice(0, 1000),
+      }));
+      const result = await sendMessage(userText, lastAssistant, history);
 
       const assistantMessage: Message = {
         id: `asst-${Date.now()}`,
