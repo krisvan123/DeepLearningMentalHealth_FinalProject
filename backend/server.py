@@ -34,6 +34,7 @@ from response.response_loader import ResponseLoader
 from response.response_manager import ResponseManager
 from utils.helpers import check_system_status, validate_user_input
 from utils.logging_utils import get_logger
+from utils.safety import needs_crisis_support
 
 logger = get_logger(__name__)
 
@@ -51,8 +52,8 @@ ALLOWED_ORIGINS = os.getenv(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permits local Next.js dev and Vercel preview
-    allow_credentials=True,
+    allow_origins=[o.strip() for o in ALLOWED_ORIGINS if o.strip() and "*" not in o],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -69,6 +70,7 @@ _response_manager = ResponseManager(loader=_response_loader)
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     last_response: Optional[str] = None
+    history: List[Dict[str, str]] = Field(default_factory=list, max_length=8)
 
 
 class ChatResponse(BaseModel):
@@ -79,6 +81,7 @@ class ChatResponse(BaseModel):
     is_ood: bool = False
     latency_ms: Optional[float] = None
     probabilities: Optional[Dict[str, float]] = None
+    safety_override: bool = False
 
 
 class StatusResponse(BaseModel):
@@ -121,26 +124,43 @@ def chat_endpoint(payload: ChatRequest):
     clean_text = validation_result
 
     if not _predictor.is_ready:
+        if needs_crisis_support(clean_text):
+            mapped = _response_manager.get_response(
+                "Suicide", user_message=clean_text
+            )
+            return ChatResponse(
+                response=mapped["text"], predicted_class="Suicide",
+                is_high_risk=True, is_ood=False, safety_override=True
+            )
         return ChatResponse(
-            response=(
-                "The application interface is operational, but the Deep Learning model weights "
-                "are currently offline. Please ensure the model artifact ('model_final.h5') is loaded."
-            ),
-            predicted_class="Unavailable",
-            confidence=0.0,
-            is_high_risk=False,
-            is_ood=False,
+            response="The inference model is currently unavailable. Please try again later.",
+            predicted_class="Unavailable", is_ood=False,
         )
 
     try:
-        pred_result = _predictor.predict(clean_text)
-        predicted_class = pred_result["predicted_class"]
-        confidence = pred_result["confidence"]
+        # Bound context and only include earlier user messages for short follow-ups.
+        previous_messages = [
+            turn["content"].strip()[:1000]
+            for turn in payload.history
+            if turn.get("role") == "user"
+            and isinstance(turn.get("content"), str)
+            and turn["content"].strip()
+        ][-3:]
+        previous = previous_messages[-1] if previous_messages else None
+        inference_text = clean_text
+        if previous and len(clean_text.split()) <= 8:
+            inference_text = previous + " " + clean_text
+        pred_result = _predictor.predict(inference_text)
+        safety_override = needs_crisis_support(clean_text)
+        predicted_class = "Suicide" if safety_override else pred_result["predicted_class"]
+        confidence = None if safety_override else pred_result["confidence"]
 
         mapped = _response_manager.get_response(
             predicted_class=predicted_class,
             confidence=confidence,
             last_response_text=payload.last_response,
+            user_message=clean_text,
+            previous_user_message=previous,
         )
 
         return ChatResponse(
@@ -148,7 +168,8 @@ def chat_endpoint(payload: ChatRequest):
             predicted_class=predicted_class,
             confidence=confidence,
             is_high_risk=mapped["is_high_risk"],
-            is_ood=pred_result["is_ood"],
+            is_ood=False if safety_override else pred_result["is_ood"],
+            safety_override=safety_override,
             latency_ms=pred_result["latency_ms"],
             probabilities=pred_result["probabilities"],
         )
