@@ -46,7 +46,8 @@ class ResponseManager:
     ) -> Dict[str, Any]:
         is_high_risk = predicted_class in HIGH_RISK_CLASSES
         current = (user_message or "").strip()
-        context = (previous_user_message or "")[-500:] + " " + current
+        # Do not bring old topics into unrelated long messages.
+        context = ((previous_user_message or "")[-500:] + " " if len(current.split()) <= 8 else "") + current
         is_indonesian = bool(INDONESIAN_MARKERS.search(current))
 
         if is_indonesian and predicted_class in INDONESIAN_RESPONSES:
