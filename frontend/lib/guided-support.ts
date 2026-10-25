@@ -250,7 +250,7 @@ const TOPICS: TopicSpec[] = [
 
 const personalSignal = /\b(i|i'm|i've|i’m|my|me|we|aku|saya|gue|gw|ku|lagi|susah|gak|nggak|enggak|tidak|takut|besok|merasa|butuh|tolong|please|help|what should i do|gimana caranya|bagaimana caranya|harus gimana|can you help)\b/i;
 const questionForHelp = /\b(what should i do|how do i cope|how can i|can you help|need help|any advice|what can i do|harus gimana|gimana caranya|bagaimana caranya|tolong|bantu|saran|cara mengatasi|solusinya)\b/i;
-const followUp = /^(?:and |but |because |what should i do|what can i do|how|why|still |i tried|i've tried|that didn't|it didn't|apa|gimana|bagaimana|kenapa|tapi |karena |masih |udah |sudah |aku sudah |aku udah |terus |lalu |jadi |enggak |gak |nggak )/i;
+const followUp = /^(?:and |but |because |what should i do|what can i do|how|why|still |i tried|i've tried|i already tried|that didn't|that's not|it didn't|it doesn't|apa|gimana|bagaimana|kenapa|tapi |karena |masih |udah |sudah |aku sudah |aku udah |terus |lalu |jadi |enggak |gak |nggak )/i;
 const triedAlready = /\b(i (?:already )?tried|i've tried|didn't (?:work|help)|doesn't help|still struggling|already tried|sudah coba|udah coba|telah coba|masih sulit|belum membantu|gak membantu|nggak membantu|tidak membantu)\b/i;
 const idMarkers = /\b(aku|saya|gue|gw|kamu|gimana|bagaimana|kenapa|lagi|nggak|gak|enggak|tidak|banget|susah|takut|sedih|ujian|kuliah|sekolah|keluarga|teman|makan|tidur|kehilangan|harus|tolong|capek|cemas|stres|pikiran)\b/i;
 
