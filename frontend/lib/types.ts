@@ -14,6 +14,8 @@ export interface Message {
   latency_ms?: number;
   probabilities?: Record<string, number>;
   error_detail?: string;
+  response_source?: "guided" | "model" | "social" | "safety";
+  support_topic?: string;
   /** True while MindCare is preparing the response. */
   isTyping?: boolean;
   /** Animate a completed, non-critical response inside the chat bubble. */
@@ -39,6 +41,8 @@ export interface ChatResponse {
   latency_ms?: number;
   probabilities?: Record<string, number>;
   safety_override?: boolean;
+  response_source?: "guided" | "model" | "social" | "safety";
+  support_topic?: string;
   status?: string;
   error?: string;
 }
