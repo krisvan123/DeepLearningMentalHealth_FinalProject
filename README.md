@@ -12,13 +12,15 @@ pinned: false
 
 > An academic text-classification prototype for exploring mental-health-related reflections and controlled responses. **Not a diagnostic tool or a substitute for professional care.**
 >
+> **Always-available Vercel update (2026-10-25):** The website can download the original model weights as static assets and run inference in the browser. This does not guarantee Vercel uptime, but avoids sleeping external Python servers. The model is loaded on each visitor's device, and the UI reports success only after loading. To regenerate the assets, use the [Export MindCare model for Vercel browser inference](.github/workflows/export-browser-model.yml) GitHub workflow.
+>
 > **Quality update (2026-10-25):** See [QUALITY_AUDIT.md](QUALITY_AUDIT.md) for the response improvements, evaluation fixes, remaining limitations, and data required for retraining. The checked-in model weights have NOT been retrained and their previously reported validation accuracy is 74.5%.
 
 ---
 
 ## 1. Project Overview
 
-**MindCare** is an academic Deep Learning application built with a modern **Next.js + React + TypeScript + Tailwind CSS** frontend deployed on **Vercel**, and a decoupled **FastAPI + TensorFlow / Keras** inference backend.
+**MindCare** is an academic Deep Learning application built with a modern **Next.js + React + TypeScript + Tailwind CSS** frontend deployed on **Vercel**. The deployment now uses an exported **TensorFlow.js Bi-LSTM model running inside visitors' browsers**, eliminating dependency on a laptop-hosted LocalTunnel. The FastAPI + TensorFlow inference backend remains available for local experiments, but is not required for the public website.
 
 Unlike generative Large Language Models (LLMs) that may hallucinate or provide unpredictable therapeutic advice, MindCare implements a **strictly controlled, classification-and-retrieval architecture**:
 
