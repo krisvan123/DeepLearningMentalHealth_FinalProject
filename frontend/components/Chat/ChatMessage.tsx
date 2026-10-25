@@ -137,9 +137,28 @@ const DeveloperCard: React.FC<{ message: Message }> = ({ message }) => {
         </div>
       )}
 
+      {message.response_source && (
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-mono-500">Response Method:</span>
+          <span className="font-medium text-right">
+            {message.response_source === "guided" ? "Topic-guided coping suggestions"
+              : message.response_source === "model" ? "Bi-LSTM + controlled response"
+              : message.response_source === "social" ? "Social greeting rule"
+              : "Safety support"}
+          </span>
+        </div>
+      )}
+      {message.support_topic && (
+        <div className="flex justify-between items-center gap-2">
+          <span className="text-mono-500">Support Topic:</span>
+          <span className="font-semibold text-right">{message.support_topic}</span>
+        </div>
+      )}
       {message.predicted_class && (
         <div className="flex justify-between items-center">
-          <span className="text-mono-500">Predicted Class:</span>
+          <span className="text-mono-500">
+            {message.response_source === "guided" ? "Bi-LSTM class (not used for reply):" : "Predicted Class:"}
+          </span>
           <span className="font-bold text-mono-900">
             {message.predicted_class}
             {message.is_ood && " (OOD Fallback)"}
