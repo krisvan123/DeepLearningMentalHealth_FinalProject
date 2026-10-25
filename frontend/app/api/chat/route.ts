@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, last_response } = body;
+    const { message, last_response, history } = body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return NextResponse.json(
@@ -35,6 +35,14 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           message: message.trim(),
           last_response: last_response,
+          history: Array.isArray(history)
+            ? history.slice(-8).filter((item: unknown) => {
+                if (!item || typeof item !== "object") return false;
+                const turn = item as Record<string, unknown>;
+                return (turn.role === "user" || turn.role === "assistant")
+                  && typeof turn.content === "string" && turn.content.length <= 1000;
+              })
+            : [],
         }),
       });
 
@@ -53,9 +61,8 @@ export async function POST(req: NextRequest) {
         {
           error: "Something went wrong while processing your message. Please try again.",
           debug: {
-            target_url: backendUrl,
             status: 503,
-            reason: `Backend inference server at '${backendUrl}' is offline or unreachable. Configure MODEL_API_URL in Vercel to your public Python backend URL.`,
+            reason: "Inference service temporarily unavailable.",
           },
         },
         { status: 503 }
