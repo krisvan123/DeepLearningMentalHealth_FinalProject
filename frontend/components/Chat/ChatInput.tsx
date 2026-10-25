@@ -46,13 +46,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="w-full">
-      {/* Loading state indicator */}
-      {isLoading && (
-        <div className="flex items-center gap-2 mb-2 text-xs text-mono-500 animate-pulse px-1">
-          <span className="w-2 h-2 rounded-full bg-mono-500" />
-          <span>Processing reflection...</span>
-        </div>
-      )}
+      {/* Processing is shown in the chat as an assistant typing bubble. */}
 
       <form
         onSubmit={handleSubmit}
