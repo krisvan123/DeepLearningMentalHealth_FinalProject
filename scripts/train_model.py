@@ -43,6 +43,8 @@ from config.config import (
     WRONG_CONTEXT_DIR,
 )
 from preprocessing.text_preprocessor import TextPreprocessor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 # Set random seeds for reproducibility
 SEED = 42
@@ -67,7 +69,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         df = pd.read_csv(addiction_file, nrows=samples_per_class * 2, encoding_errors="ignore")
         col = "post" if "post" in df.columns else df.columns[0]
         texts = [preprocessor.clean_text(str(t)) for t in df[col].dropna() if len(str(t).strip()) > 20]
-        selected = texts[:samples_per_class]
+        selected = list(dict.fromkeys(texts))
+        random.shuffle(selected)
+        selected = selected[:samples_per_class]
         for t in selected:
             data.append((t, label_to_idx["Addiction"]))
         print(f"  [+] Addiction: loaded {len(selected)} samples")
@@ -78,7 +82,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         df = pd.read_csv(anxiety_file, nrows=samples_per_class * 2, encoding_errors="ignore")
         col = "post" if "post" in df.columns else df.columns[0]
         texts = [preprocessor.clean_text(str(t)) for t in df[col].dropna() if len(str(t).strip()) > 20]
-        selected = texts[:samples_per_class]
+        selected = list(dict.fromkeys(texts))
+        random.shuffle(selected)
+        selected = selected[:samples_per_class]
         for t in selected:
             data.append((t, label_to_idx["Anxiety"]))
         print(f"  [+] Anxiety: loaded {len(selected)} samples")
@@ -89,7 +95,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         df = pd.read_csv(depression_file, nrows=samples_per_class * 2, encoding_errors="ignore")
         col = "post" if "post" in df.columns else df.columns[0]
         texts = [preprocessor.clean_text(str(t)) for t in df[col].dropna() if len(str(t).strip()) > 20]
-        selected = texts[:samples_per_class]
+        selected = list(dict.fromkeys(texts))
+        random.shuffle(selected)
+        selected = selected[:samples_per_class]
         for t in selected:
             data.append((t, label_to_idx["Depression"]))
         print(f"  [+] Depression: loaded {len(selected)} samples")
@@ -100,7 +108,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         df = pd.read_csv(ed_file, nrows=samples_per_class * 2, encoding_errors="ignore")
         col = "post" if "post" in df.columns else df.columns[0]
         texts = [preprocessor.clean_text(str(t)) for t in df[col].dropna() if len(str(t).strip()) > 20]
-        selected = texts[:samples_per_class]
+        selected = list(dict.fromkeys(texts))
+        random.shuffle(selected)
+        selected = selected[:samples_per_class]
         for t in selected:
             data.append((t, label_to_idx["Eating Disorder"]))
         print(f"  [+] Eating Disorder: loaded {len(selected)} samples")
@@ -111,7 +121,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         df = pd.read_csv(suicide_file, nrows=samples_per_class * 2, encoding_errors="ignore")
         col = "post" if "post" in df.columns else df.columns[0]
         texts = [preprocessor.clean_text(str(t)) for t in df[col].dropna() if len(str(t).strip()) > 20]
-        selected = texts[:samples_per_class]
+        selected = list(dict.fromkeys(texts))
+        random.shuffle(selected)
+        selected = selected[:samples_per_class]
         for t in selected:
             data.append((t, label_to_idx["Suicide"]))
         print(f"  [+] Suicide: loaded {len(selected)} samples")
@@ -127,7 +139,9 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
             if len(cleaned) > 20:
                 ood_texts.append(cleaned)
 
-    selected_ood = ood_texts[:samples_per_class]
+    selected_ood = list(dict.fromkeys(ood_texts))
+    random.shuffle(selected_ood)
+    selected_ood = selected_ood[:samples_per_class]
     for t in selected_ood:
         data.append((t, label_to_idx["OOD"]))
     print(f"  [+] OOD: loaded {len(selected_ood)} samples")
@@ -164,10 +178,10 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         "hello assistant", "hi I want to talk", "hey there", "greetings",
         "good day", "hello how are you doing", "hi can we talk"
     ]
-    while len(greeting_texts) < samples_per_class:
-        for bg in base_greetings:
-            if len(greeting_texts) < samples_per_class:
-                greeting_texts.append(preprocessor.clean_text(bg))
+    for bg in base_greetings:
+        cleaned = preprocessor.clean_text(bg)
+        if cleaned not in greeting_texts:
+            greeting_texts.append(cleaned)
 
     for t in neutral_texts[:samples_per_class]:
         data.append((t, label_to_idx["Neutral"]))
@@ -177,8 +191,28 @@ def load_balanced_data(samples_per_class: int = 1200) -> Tuple[List[str], List[i
         data.append((t, label_to_idx["Greeting"]))
     print(f"  [+] Greeting: loaded {len(greeting_texts[:samples_per_class])} samples")
 
-    # Shuffle the dataset
+    # Remove duplicated and conflicting examples BEFORE splitting. Never let
+    # copies of a sentence appear in both training and evaluation datasets.
+    unique = {}
+    conflicting = set()
+    for sentence, label in data:
+        if sentence in unique and unique[sentence] != label:
+            conflicting.add(sentence)
+        else:
+            unique[sentence] = label
+    for sentence in conflicting:
+        unique.pop(sentence, None)
+    data = list(unique.items())
     random.shuffle(data)
+    counts = {label: sum(y == idx for _, y in data)
+              for idx, label in enumerate(CLASS_LABELS)}
+    print("Distinct, non-conflicting examples per class:", counts)
+    missing = [label for label, n in counts.items() if n < 10]
+    if missing:
+        raise ValueError(
+            "Insufficient real data for classes: " + ", ".join(missing)
+            + ". Supply the source CSVs; repeated synthetic copies are not valid training samples."
+        )
     X = [item[0] for item in data]
     y = [item[1] for item in data]
     print(f"Total dataset compiled: {len(X)} examples across {len(CLASS_LABELS)} classes.")
@@ -191,21 +225,30 @@ def build_and_train_model():
 
     X_texts, y_labels = load_balanced_data(samples_per_class=1000)
 
-    # 1. Fit Tokenizer
-    print(f"Fitting Keras Tokenizer (max_words={MAX_VOCAB_SIZE})...")
+    # Split BEFORE fitting tokenizer to avoid leaking validation/test vocabulary.
+    x_train, x_hold, y_train, y_hold = train_test_split(
+        X_texts, y_labels, test_size=0.20, stratify=y_labels, random_state=SEED
+    )
+    x_val, x_test, y_val, y_test = train_test_split(
+        x_hold, y_hold, test_size=0.50, stratify=y_hold, random_state=SEED
+    )
+    print(f"Train/validation/test: {len(x_train)}/{len(x_val)}/{len(x_test)}")
     tokenizer = tf.keras.preprocessing.text.Tokenizer(
-        num_words=MAX_VOCAB_SIZE,
-        oov_token="<OOV>",
-        filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
-        lower=True,
+        num_words=MAX_VOCAB_SIZE, oov_token="<OOV>",
+        filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True,
     )
-    tokenizer.fit_on_texts(X_texts)
+    tokenizer.fit_on_texts(x_train)
 
-    sequences = tokenizer.texts_to_sequences(X_texts)
-    X_padded = tf.keras.preprocessing.sequence.pad_sequences(
-        sequences, maxlen=MAX_SEQUENCE_LENGTH, padding="post", truncating="post"
-    )
-    y_array = np.array(y_labels, dtype=np.int32)
+    def encode(texts):
+        return tf.keras.preprocessing.sequence.pad_sequences(
+            tokenizer.texts_to_sequences(texts),
+            maxlen=MAX_SEQUENCE_LENGTH, padding="post", truncating="post"
+        )
+
+    X_train, X_val, X_test = encode(x_train), encode(x_val), encode(x_test)
+    y_train = np.array(y_train, dtype=np.int32)
+    y_val = np.array(y_val, dtype=np.int32)
+    y_test = np.array(y_test, dtype=np.int32)
 
     # 2. Build Bi-LSTM Architecture
     num_classes = len(CLASS_LABELS)
@@ -236,18 +279,29 @@ def build_and_train_model():
 
     # 3. Train Model
     print("Training Bi-LSTM text classification model...")
-    epochs = 4
-    batch_size = 64
-
-    # Validation split 15%
     history = model.fit(
-        X_padded,
-        y_array,
-        epochs=epochs,
-        batch_size=batch_size,
-        validation_split=0.15,
+        X_train, y_train,
+        epochs=14,
+        batch_size=64,
+        validation_data=(X_val, y_val),
+        callbacks=[tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=3, restore_best_weights=True
+        )],
         verbose=1,
     )
+    # A genuinely untouched holdout split measures generalization. It must
+    # not be used to tune architecture or select the threshold.
+    test_probs = model.predict(X_test, verbose=0)
+    test_pred = np.argmax(test_probs, axis=1)
+    holdout_accuracy = float(accuracy_score(y_test, test_pred))
+    report = classification_report(
+        y_test, test_pred, labels=list(range(len(CLASS_LABELS))),
+        target_names=CLASS_LABELS, zero_division=0, output_dict=True
+    )
+    matrix = confusion_matrix(
+        y_test, test_pred, labels=list(range(len(CLASS_LABELS)))
+    ).tolist()
+    print(f"Untouched holdout accuracy: {holdout_accuracy:.3f}")
 
     # 4. Save Artifacts
     print(f"Saving model to {MODEL_PATH}...")
@@ -272,7 +326,13 @@ def build_and_train_model():
         "vocab_size_fitted": min(len(tokenizer.word_index) + 1, MAX_VOCAB_SIZE),
         "total_training_samples": len(X_texts),
         "final_accuracy": float(history.history["accuracy"][-1]),
-        "final_val_accuracy": float(history.history["val_accuracy"][-1]),
+        "final_val_accuracy": float(model.evaluate(X_val, y_val, verbose=0)[1]),
+        "holdout_accuracy": holdout_accuracy,
+        "holdout_macro_f1": float(report["macro avg"]["f1-score"]),
+        "heldout_samples": len(x_test),
+        "per_class_report": report,
+        "confusion_matrix": matrix,
+        "evaluation_warning": "Holdout is from same source domains; perform independent multilingual and safety evaluations before production.",
     }
     with open(MODEL_METADATA_PATH, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
