@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { Message, ModelStatus } from "@/lib/types";
 import { getBrowserModelStatus, sendBrowserMessage } from "@/lib/browser-inference";
@@ -16,6 +16,9 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [developerMode, setDeveloperMode] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
+  // A new conversation invalidates any previous asynchronous response.
+  const conversationGeneration = useRef(0);
+  const pendingRequest = useRef(false);
 
   // Fetch model health and configuration status on load and periodically
   useEffect(() => {
@@ -43,63 +46,96 @@ export default function Home() {
   }, []);
 
   const handleSendMessage = async (userText: string) => {
-    if (!userText.trim() || isLoading) return;
+    if (!userText.trim() || pendingRequest.current) return;
 
-    const userMessageId = `user-${Date.now()}`;
-    const newUserMessage: Message = {
-      id: userMessageId,
-      role: "user",
-      content: userText,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, newUserMessage]);
+    const text = userText.trim();
+    const generation = conversationGeneration.current;
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const placeholderId = `asst-${token}`;
+    const startedAt = performance.now();
+    pendingRequest.current = true;
     setIsLoading(true);
 
+    // Place the assistant bubble immediately, rather than waiting for inference.
+    setMessages((previous) => [
+      ...previous,
+      {
+        id: `user-${token}`, role: "user", content: text,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        id: placeholderId, role: "assistant", content: "",
+        timestamp: new Date().toISOString(), isTyping: true,
+      },
+    ]);
+
     try {
-      // Find the last assistant response to avoid immediate repetition in response manager
       const lastAssistant = [...messages]
         .reverse()
-        .find((m) => m.role === "assistant")?.content;
+        .find((m) => m.role === "assistant" && !m.isTyping)?.content;
+      const history = messages
+        .filter((m) => !m.isTyping)
+        .slice(-8)
+        .map((m) => ({ role: m.role, content: m.content.slice(0, 1000) }));
+      const result = await sendBrowserMessage(text, lastAssistant, history);
 
-      const history = messages.slice(-8).map((m) => ({
-        role: m.role,
-        content: m.content.slice(0, 1000),
-      }));
-      const result = await sendBrowserMessage(userText, lastAssistant, history);
+      // A brief visual transition keeps instant template replies readable.
+      // Urgent support replies are never deliberately delayed or animated.
+      if (!result.is_high_risk && !result.safety_override) {
+        const remaining = Math.max(0, 450 - (performance.now() - startedAt));
+        if (remaining) await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+      }
+      if (generation !== conversationGeneration.current) return;
 
-      const assistantMessage: Message = {
-        id: `asst-${Date.now()}`,
-        role: "assistant",
-        content: result.response,
-        timestamp: new Date().toISOString(),
-        predicted_class: result.predicted_class,
-        confidence: result.confidence,
-        is_high_risk: result.is_high_risk,
-        is_ood: result.is_ood,
-        latency_ms: result.latency_ms,
-        probabilities: result.probabilities,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((previous) =>
+        previous.map((message) => message.id === placeholderId
+          ? {
+              id: placeholderId,
+              role: "assistant" as const,
+              content: result.response,
+              timestamp: new Date().toISOString(),
+              predicted_class: result.predicted_class,
+              confidence: result.confidence,
+              is_high_risk: result.is_high_risk,
+              is_ood: result.is_ood,
+              latency_ms: result.latency_ms,
+              probabilities: result.probabilities,
+              isTyping: false,
+              isRevealing: !result.is_high_risk && !result.safety_override,
+            }
+          : message
+        )
+      );
     } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Inference service unreachable";
-      const fallbackMessage: Message = {
-        id: `asst-${Date.now()}`,
-        role: "assistant",
-        content: "Something went wrong while processing your message. Please try again.",
-        timestamp: new Date().toISOString(),
-        error_detail: errorMsg,
-        predicted_class: "Error",
-      };
-      setMessages((prev) => [...prev, fallbackMessage]);
+      if (generation !== conversationGeneration.current) return;
+      const errorMsg = err instanceof Error ? err.message : "Model unavailable";
+      setMessages((previous) =>
+        previous.map((message) => message.id === placeholderId
+          ? {
+              id: placeholderId,
+              role: "assistant" as const,
+              content: "I couldn't prepare a response right now. Please try again.",
+              timestamp: new Date().toISOString(),
+              error_detail: errorMsg,
+              predicted_class: "Error",
+              isTyping: false,
+              isRevealing: false,
+            }
+          : message
+        )
+      );
     } finally {
-      setIsLoading(false);
+      if (generation === conversationGeneration.current) {
+        pendingRequest.current = false;
+        setIsLoading(false);
+      }
     }
   };
 
   const handleNewConversation = () => {
+    conversationGeneration.current += 1;
+    pendingRequest.current = false;
+    setIsLoading(false);
     setMessages([]);
   };
 
