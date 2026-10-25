@@ -16,9 +16,14 @@ export interface Message {
   error_detail?: string;
 }
 
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
 export interface ChatRequest {
   message: string;
   last_response?: string;
+  history?: ChatTurn[];
 }
 
 export interface ChatResponse {
@@ -29,6 +34,7 @@ export interface ChatResponse {
   is_ood?: boolean;
   latency_ms?: number;
   probabilities?: Record<string, number>;
+  safety_override?: boolean;
   status?: string;
   error?: string;
 }
