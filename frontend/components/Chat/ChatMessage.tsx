@@ -1,6 +1,6 @@
 import React from "react";
 import { Message } from "@/lib/types";
-import { AlertTriangle, Clock, Server, Terminal } from "lucide-react";
+import { AlertTriangle, Clock, Terminal } from "lucide-react";
 
 interface ChatMessageProps {
   message: Message;
@@ -13,12 +13,53 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const isUser = message.role === "user";
   const isHighRisk = message.is_high_risk;
+  const [visibleText, setVisibleText] = React.useState(
+    message.isRevealing ? "" : message.content
+  );
+
+  React.useEffect(() => {
+    if (message.isTyping) {
+      setVisibleText("");
+      return;
+    }
+    if (!message.isRevealing || isHighRisk ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisibleText(message.content);
+      return;
+    }
+    let length = 0;
+    const increment = Math.max(2, Math.ceil(message.content.length / 85));
+    setVisibleText("");
+    const timer = window.setInterval(() => {
+      length = Math.min(message.content.length, length + increment);
+      setVisibleText(message.content.slice(0, length));
+      if (length >= message.content.length) window.clearInterval(timer);
+    }, 30);
+    return () => window.clearInterval(timer);
+  }, [message.content, message.isTyping, message.isRevealing, isHighRisk]);
 
   if (isUser) {
     return (
       <div className="flex justify-end my-1 w-full">
         <div className="bg-black text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-[85%] sm:max-w-[70%] text-sm leading-relaxed shadow-sm">
           {message.content}
+        </div>
+      </div>
+    );
+  }
+
+  // Indicate real work (model inference / response selection), not a
+  // simulated streaming model. Never expose speculative probabilities here.
+  if (message.isTyping) {
+    return (
+      <div className="flex justify-start my-2 w-full" role="status" aria-label="MindCare is preparing a reply">
+        <div className="border border-mono-200 bg-white rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+          <div className="text-xs text-mono-500 mb-2.5">MindCare is preparing a reply</div>
+          <div className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="mindcare-typing-dot h-2 w-2 rounded-full bg-mono-500" />
+            <span className="mindcare-typing-dot h-2 w-2 rounded-full bg-mono-500" />
+            <span className="mindcare-typing-dot h-2 w-2 rounded-full bg-mono-500" />
+          </div>
         </div>
       </div>
     );
@@ -58,10 +99,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     <div className="flex justify-start my-1 w-full">
       <div className="w-full max-w-[95%] sm:max-w-[78%] space-y-2.5">
         <div className="bg-white text-mono-900 border border-mono-200 px-5 py-4 rounded-2xl rounded-tl-sm text-sm leading-relaxed shadow-sm whitespace-pre-line">
-          {message.content}
+          {message.isRevealing && visibleText.length < message.content.length && (
+            <span className="sr-only">{message.content}</span>
+          )}
+          <span aria-hidden={message.isRevealing ? true : undefined}>{visibleText}</span>
+          {message.isRevealing && visibleText.length < message.content.length && (
+            <span aria-hidden="true" className="mindcare-type-cursor inline-block ml-0.5 align-[-2px] h-3.5 w-0.5 bg-mono-600" />
+          )}
         </div>
 
-        {developerMode && <DeveloperCard message={message} />}
+        {developerMode && (!message.isRevealing || visibleText.length === message.content.length) && (
+          <DeveloperCard message={message} />
+        )}
       </div>
     </div>
   );
