@@ -10,7 +10,9 @@ pinned: false
 
 # MindCare — Deep Learning Mental Health Chatbot
 
-> A research-grade, modern web-based text classification assistant designed to categorize user reflections and provide safe, controlled, empathetic responses.
+> An academic text-classification prototype for exploring mental-health-related reflections and controlled responses. **Not a diagnostic tool or a substitute for professional care.**
+>
+> **Quality update (2026-10-25):** See [QUALITY_AUDIT.md](QUALITY_AUDIT.md) for the response improvements, evaluation fixes, remaining limitations, and data required for retraining. The checked-in model weights have NOT been retrained and their previously reported validation accuracy is 74.5%.
 
 ---
 
