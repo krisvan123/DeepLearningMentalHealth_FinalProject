@@ -6,6 +6,7 @@
  * Predictions are research categories, not diagnoses.
  */
 import type { ChatResponse, ChatTurn, ModelStatus } from "./types";
+import { recognizeSocialOpening, socialOpeningReply } from "./conversation-intents";
 import type * as TF from "@tensorflow/tfjs";
 
 type RuntimeConfig = {
@@ -66,7 +67,7 @@ const topics: { test: RegExp; english: string; indonesia: string }[] = [
 ];
 
 const localizedAnswers: Record<string, string> = {
-  "Greeting": "Halo! Kamu bisa cerita tentang hal yang sedang kamu pikirkan atau rasakan. Aku akan mencoba membantu menata ceritanya.",
+  "Greeting": "Halo! Senang kamu mampir. Ada hal yang ingin kamu ceritakan hari ini?",
   "Neutral": "Terima kasih sudah bercerita. Ada bagian dari pengalaman itu yang ingin kamu bahas lebih lanjut?",
   "Anxiety": "Sepertinya situasi ini membuatmu khawatir. Kita bisa membahasnya pelan-pelan. Bagian mana yang paling mengganggu pikiranmu sekarang?",
   "Depression": "Terima kasih sudah terbuka. Kedengarannya akhir-akhir ini terasa berat. Kamu boleh mulai dari hal yang paling ingin kamu ceritakan.",
@@ -82,7 +83,7 @@ function safetyCue(text: string): boolean {
 }
 
 function simpleTheme(message: string): string | null {
-  if (/^\s*(halo|hai|hi|hello|selamat\s+(pagi|siang|sore|malam))\s*[!?.]*\s*$/i.test(message)) return "Greeting";
+  if (recognizeSocialOpening(message)) return "Greeting";
   if (/\b(aku|saya|gue|gw)\b/i.test(message) && anxiousMarkers.test(message)) return "Anxiety";
   return null;
 }
@@ -118,6 +119,8 @@ function chooseResponse(
   let answer: string;
   if (indonesia && localizedAnswers[label]) {
     answer = localizedAnswers[label];
+  } else if (label === "Greeting") {
+    answer = "Hi! Thanks for stopping by. What would you like to talk about?";
   } else if (templates.length) {
     // Stable rotation; avoid repeating identical answer from previous turn.
     let hash = 0;
@@ -179,6 +182,18 @@ export async function sendBrowserMessage(
     };
   }
 
+  // A greeting is a social opening, not a mental-health diagnosis. Short-
+  // circuit the classifier and do not invent a neural-network probability.
+  const socialAnswer = socialOpeningReply(message);
+  if (socialAnswer) {
+    return {
+      response: socialAnswer,
+      predicted_class: "Greeting",
+      is_high_risk: false,
+      is_ood: false,
+    };
+  }
+
   const { tf, model, config } = await loadRuntime();
   const preceding = [...history].reverse().find((turn) => turn.role === "user")?.content || "";
   const inputText = preceding && message.trim().split(/\s+/).length <= 8
@@ -211,6 +226,9 @@ export async function sendBrowserMessage(
     is_high_risk: predictedClass === "Suicide",
     is_ood: predictedClass === "OOD",
     latency_ms: performance.now() - t0,
-    probabilities: Object.fromEntries(config.classes.map((category, index) => [category, scores[index]])),
+    // Rule overrides do not have a corresponding neural confidence or
+    // probability distribution; never show a contradictory developer panel.
+    probabilities: knownTheme ? undefined :
+      Object.fromEntries(config.classes.map((category, index) => [category, scores[index]])),
   };
 }
