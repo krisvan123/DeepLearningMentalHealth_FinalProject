@@ -52,5 +52,6 @@ jobs:
             echo "No asset changes"
           else
             git commit -m "build: publish browser inference model assets"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            git pull --rebase origin "$GITHUB_REF_NAME"
+            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
