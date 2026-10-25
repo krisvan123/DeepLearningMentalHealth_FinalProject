@@ -14,6 +14,10 @@ export interface Message {
   latency_ms?: number;
   probabilities?: Record<string, number>;
   error_detail?: string;
+  /** True while MindCare is preparing the response. */
+  isTyping?: boolean;
+  /** Animate a completed, non-critical response inside the chat bubble. */
+  isRevealing?: boolean;
 }
 
 export interface ChatTurn {
