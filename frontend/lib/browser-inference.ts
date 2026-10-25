@@ -7,7 +7,7 @@
  */
 import type { ChatResponse, ChatTurn, ModelStatus } from "./types";
 import { recognizeSocialOpening, socialOpeningReply } from "./conversation-intents";
-import { createGuidedSupport } from "./guided-support";
+import { createGuidedSupport, generalSupportForClass } from "./guided-support";
 import type * as TF from "@tensorflow/tfjs";
 
 type RuntimeConfig = {
@@ -117,8 +117,11 @@ function chooseResponse(
 ): string {
   const indonesia = languageMarkers.test(userText);
   const templates = cfg.responses[label] || [];
+  const actionable = generalSupportForClass(label, userText, lastResponse);
   let answer: string;
-  if (indonesia && localizedAnswers[label]) {
+  if (label !== "Suicide" && actionable) {
+    answer = actionable;
+  } else if (indonesia && localizedAnswers[label]) {
     answer = localizedAnswers[label];
   } else if (label === "Greeting") {
     answer = "Hi! Thanks for stopping by. What would you like to talk about?";
@@ -135,7 +138,7 @@ function chooseResponse(
     answer = "Thank you for sharing. Could you tell me more about what you mean?";
   }
 
-  if (label !== "Suicide" && ["Neutral", "Anxiety", "Depression"].includes(label)) {
+  if (!actionable && label !== "Suicide" && ["Neutral", "Anxiety", "Depression"].includes(label)) {
     const previous = [...history].reverse().find((turn) => turn.role === "user")?.content || "";
     const text = (userText.trim().split(/\s+/).length <= 8 ? previous.slice(-500) + " " : "") + userText;
     const topic = topics.find((candidate) => candidate.test.test(text));
