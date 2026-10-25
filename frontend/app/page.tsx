@@ -103,9 +103,11 @@ export default function Home() {
     setMessages([]);
   };
 
-  const currentStatus = modelStatus?.model_ready
+  const currentStatus = modelStatus === null
+    ? "connecting"
+    : modelStatus.model_ready
     ? "ready"
-    : modelStatus?.status === "connecting"
+    : modelStatus.status === "connecting"
     ? "connecting"
     : "unavailable";
 
