@@ -306,3 +306,79 @@ export function createGuidedSupport(
     language: indonesia ? "id" : "en",
   };
 }
+
+
+/** Controlled, non-diagnostic fallback advice when no situation is recognized. */
+const generalSuggestions: Record<string, { id: [string, string]; en: [string, string] }> = {
+  Anxiety: {
+    id: [
+      "Sepertinya ada hal yang membuatmu khawatir. Kalau nyaman, coba amati lingkungan di sekitarmu sejenak dan tulis satu hal yang bisa kamu lakukan. Apa yang paling mengganggu pikiranmu?",
+      "Kalau rasa cemas masih mengganggu, coba pisahkan hal yang bisa kamu kendalikan dari yang tidak, atau cerita pada orang tepercaya. Hal apa yang ingin kamu mulai dulu?",
+    ],
+    en: [
+      "It sounds like something may be worrying you. If comfortable, notice your surroundings and identify one thing you can do now. What's the biggest concern?",
+      "If worry is still intense, try writing down what you can control or talk with someone you trust. Where would you like to start?",
+    ],
+  },
+  Depression: {
+    id: [
+      "Terima kasih sudah cerita. Aku tidak bisa menyimpulkan kondisi kesehatan mental dari sebuah pesan, tetapi perasaan beratmu layak didengar. Kalau memungkinkan, pilih satu aktivitas ringan yang terasa nyaman hari ini. Apa yang paling menguras energimu?",
+      "Kalau perasaan ini terus mengganggu keseharian, pertimbangkan menghubungi orang tepercaya atau tenaga profesional. Kita juga bisa mencoba menata satu masalah kecil bersama.",
+    ],
+    en: [
+      "Thank you for opening up. I can't determine a mental-health condition from one message, but your feelings matter. If possible, choose one gentle activity today. What has been draining your energy?",
+      "If these feelings persist or disrupt everyday life, consider reaching out to someone you trust or a qualified professional. We can also break down one concern.",
+    ],
+  },
+  "Eating Disorder": {
+    id: [
+      "Jika pikiran tentang makanan atau tubuh membuatmu tertekan, kamu layak mendapat dukungan tanpa dihakimi. Kamu tidak perlu membatasi makan untuk menghukum diri. Apa yang paling mengganggu pikiranmu?",
+      "Jika kekhawatiran tentang makanan terus terasa berat, cobalah berbicara dengan orang tepercaya atau tenaga kesehatan yang memahami masalah makan. Dukungan apa yang kamu butuhkan?",
+    ],
+    en: [
+      "If thoughts about food or your body feel distressing, you deserve support without judgment. You don't need to restrict food as punishment. What concerns feel most difficult?",
+      "If concerns around food keep affecting your days, consider talking to someone you trust or a qualified professional. What support would help you most?",
+    ],
+  },
+  Addiction: {
+    id: [
+      "Mengubah kebiasaan bisa terasa sulit. Kalau kamu mau, amati kapan dorongan itu biasanya muncul dan pilih satu kegiatan alternatif yang aman. Bagian mana yang paling berat sekarang?",
+      "Kalau sudah mencoba berubah tetapi masih kesulitan, dukungan orang tepercaya atau profesional bisa membantu menyusun langkah yang lebih cocok. Apa yang sudah kamu coba?",
+    ],
+    en: [
+      "Changing a habit can feel frustrating. If you want, notice when the urge shows up and choose a safe alternative activity. Which part feels hardest?",
+      "If you've tried making changes and are still struggling, support from someone you trust or a qualified professional may help. What have you tried so far?",
+    ],
+  },
+  Neutral: {
+    id: [
+      "Makasih sudah bercerita. Kamu ingin membahas apa yang terjadi, atau mencari langkah berikutnya?",
+      "Kalau kamu mau, kita bisa mengurai satu hal yang paling penting supaya langkah berikutnya lebih jelas.",
+    ],
+    en: [
+      "Thanks for sharing that. Would you rather talk about what happened or work out a next step?",
+      "If you'd like, tell me which part matters most and we can think through a small next step.",
+    ],
+  },
+  OOD: {
+    id: [
+      "MindCare berfokus pada percakapan tentang perasaan dan kesejahteraan emosional. Kalau ada hal yang membuatmu tertekan, kamu boleh cerita lebih lanjut.",
+      "Aku tidak bisa menjawab semua jenis pertanyaan, tetapi bisa membantu kamu menata apa yang sedang dipikirkan atau dirasakan.",
+    ],
+    en: [
+      "MindCare focuses on emotional well-being rather than general factual answers. Is there a concern you'd like to talk through?",
+      "I can't answer every kind of question, but I can help you reflect on how a situation is affecting you.",
+    ],
+  },
+};
+
+export function generalSupportForClass(
+  label: string,
+  userMessage: string,
+  lastResponse?: string,
+): string | null {
+  const suggestions = generalSuggestions[label];
+  if (!suggestions) return null;
+  const [first, second] = idMarkers.test(userMessage) ? suggestions.id : suggestions.en;
+  return lastResponse === first ? second : first;
+}
