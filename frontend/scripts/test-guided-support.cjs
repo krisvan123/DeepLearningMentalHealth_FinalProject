@@ -15,7 +15,7 @@ const compiled = ts.transpileModule(fs.readFileSync(file, "utf8"), {
 }).outputText;
 const moduleRef = { exports: {} };
 new Function("module", "exports", compiled)(moduleRef, moduleRef.exports);
-const { createGuidedSupport, generalSupportForClass } = moduleRef.exports;
+const { createGuidedSupport, generalSupportForClass, positiveCheckinReply } = moduleRef.exports;
 
 const scenarios = [
   ["Aku takut karena ujian besok", "School and exam stress", "Pilih satu topik"],
@@ -38,6 +38,12 @@ for (const [input, topic, phrase] of scenarios) {
   assert.ok(result.response.includes(phrase), "Expected practical step for: " + input);
   assert.ok(result.response.includes("?"), "Expected a relevant follow-up question");
 }
+
+assert.match(positiveCheckinReply("I passed my exam today"), /good news/i);
+assert.match(positiveCheckinReply("Aku lulus ujian!"), /kabar baik/i);
+assert.equal(positiveCheckinReply("I passed my exam but I'm worried about university"), null);
+assert.equal(createGuidedSupport("I passed my exam today"), null);
+assert.equal(createGuidedSupport("Aku lulus ujian hari ini"), null);
 
 assert.equal(createGuidedSupport("I love food"), null);
 assert.equal(createGuidedSupport("I slept well"), null);
