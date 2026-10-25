@@ -1,15 +1,17 @@
-import { ChatRequest, ChatResponse, ModelStatus } from "./types";
+import { ChatRequest, ChatResponse, ModelStatus, ChatTurn } from "./types";
 
 /**
  * Send user message to the chat API route.
  */
 export async function sendMessage(
   message: string,
-  lastResponse?: string
+  lastResponse?: string,
+  history: ChatTurn[] = []
 ): Promise<ChatResponse> {
   const payload: ChatRequest = {
     message,
     last_response: lastResponse,
+    history: history.slice(-8),
   };
 
   const response = await fetch("/api/chat", {
