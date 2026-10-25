@@ -7,6 +7,7 @@
  */
 import type { ChatResponse, ChatTurn, ModelStatus } from "./types";
 import { recognizeSocialOpening, socialOpeningReply } from "./conversation-intents";
+import { createGuidedSupport } from "./guided-support";
 import type * as TF from "@tensorflow/tfjs";
 
 type RuntimeConfig = {
@@ -178,7 +179,8 @@ export async function sendBrowserMessage(
     return {
       response: languageMarkers.test(message) ? localizedAnswers.Suicide :
         "I'm glad you reached out. If you're not safe right now, contact local emergency services or a trusted person who can help you immediately. You deserve support.",
-      predicted_class: "Suicide", is_high_risk: true, is_ood: false, safety_override: true,
+      predicted_class: "Suicide", is_high_risk: true, is_ood: false,
+      safety_override: true, response_source: "safety",
     };
   }
 
@@ -188,13 +190,31 @@ export async function sendBrowserMessage(
   if (socialAnswer) {
     return {
       response: socialAnswer,
-      predicted_class: "Greeting",
+      predicted_class: "Greeting", response_source: "social",
       is_high_risk: false,
       is_ood: false,
     };
   }
 
-  const { tf, model, config } = await loadRuntime();
+  const guided = createGuidedSupport(message, history, lastResponse);
+  let runtime: Runtime;
+  try {
+    runtime = await loadRuntime();
+  } catch (error) {
+    // Do not imply that the neural network ran if its files could not load.
+    // Bounded, non-clinical guidance is still accessible without inference.
+    if (guided) {
+      return {
+        response: guided.response,
+        response_source: "guided",
+        support_topic: guided.topic,
+        is_high_risk: false,
+        is_ood: false,
+      };
+    }
+    throw error;
+  }
+  const { tf, model, config } = runtime;
   const preceding = [...history].reverse().find((turn) => turn.role === "user")?.content || "";
   const inputText = preceding && message.trim().split(/\s+/).length <= 8
     ? preceding.slice(-1000) + " " + message : message;
@@ -219,8 +239,17 @@ export async function sendBrowserMessage(
   const confidence = scores[winner];
   const knownTheme = simpleTheme(message);
   const predictedClass = knownTheme || (confidence < config.threshold ? "OOD" : rawClass);
+  // Known real-world situations get a relevant, actionable answer. The
+  // Bi-LSTM category remains available for research inspection, but is NOT
+  // represented as a clinical diagnosis or the source of guided advice.
+  // Independent safety cues and classified crisis support remain higher priority.
+  const useGuidance = Boolean(guided) && predictedClass !== "Suicide";
   return {
-    response: chooseResponse(predictedClass, message, lastResponse, history, config),
+    response: useGuidance && guided
+      ? guided.response
+      : chooseResponse(predictedClass, message, lastResponse, history, config),
+    response_source: useGuidance ? "guided" : "model",
+    support_topic: useGuidance ? guided?.topic : undefined,
     predicted_class: predictedClass,
     confidence: knownTheme ? undefined : confidence,
     is_high_risk: predictedClass === "Suicide",
@@ -228,7 +257,7 @@ export async function sendBrowserMessage(
     latency_ms: performance.now() - t0,
     // Rule overrides do not have a corresponding neural confidence or
     // probability distribution; never show a contradictory developer panel.
-    probabilities: knownTheme ? undefined :
+    probabilities: knownTheme || useGuidance ? undefined :
       Object.fromEntries(config.classes.map((category, index) => [category, scores[index]])),
   };
 }
