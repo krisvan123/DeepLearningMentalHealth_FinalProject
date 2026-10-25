@@ -100,6 +100,8 @@ export default function Home() {
               is_ood: result.is_ood,
               latency_ms: result.latency_ms,
               probabilities: result.probabilities,
+              response_source: result.response_source,
+              support_topic: result.support_topic,
               isTyping: false,
               isRevealing: !result.is_high_risk && !result.safety_override,
             }
