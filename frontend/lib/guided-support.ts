@@ -273,6 +273,14 @@ export function createGuidedSupport(
     questionForHelp.test(current);
   let topic = directlyRelevant ? TOPICS.find((item) => item.match.test(current)) : undefined;
 
+  // A happy result is not a stress disclosure. Do not offer exam anxiety
+  // advice when someone is celebrating passing an exam or interview.
+  if (topic && (topic.key === "exam" || topic.key === "interview") &&
+      /\b(passed|success|did well|went well|happy|excited|lulus|berhasil|senang|gembira)\b/i.test(current) &&
+      !/\b(but|however|worried|nervous|afraid|anxious|stressed|scared|tapi|cemas|takut|khawatir|stres|gelisah)\b/i.test(current)) {
+    topic = undefined;
+  }
+
   // Mentioning ordinary activities alone is not evidence of distress. Do
   // not turn "I like food" or "I slept well" into an unsolicited intervention.
   if (topic?.key === "food" &&
@@ -381,4 +389,20 @@ export function generalSupportForClass(
   if (!suggestions) return null;
   const [first, second] = idMarkers.test(userMessage) ? suggestions.id : suggestions.en;
   return lastResponse === first ? second : first;
+}
+
+
+/** Celebrate straightforward positive check-ins rather than medicalising them. */
+export function positiveCheckinReply(message: string): string | null {
+  const text = message.trim().toLowerCase().replace(/[!?.]+$/g, "").trim();
+  if (/\b(but|however|although|worried|nervous|anxious|afraid|tapi|namun|takut|cemas|khawatir|stres)\b/i.test(text)) {
+    return null; // Mixed emotions need their own context, not a cheerleading shortcut.
+  }
+  if (/^(?:aku|saya|gue|gw)\s+(?:(?:akhirnya\s+)?lulus\s+(?:ujian|tes|wawancara|interview)|(?:senang|bahagia|gembira)(?:\s+banget)?(?:\s+hari ini)?|berhasil\s+menyelesaikan\s+(?:tugas|ujian))\b/i.test(text)) {
+    return "Wah, terima kasih sudah berbagi kabar baik itu! Apa bagian yang paling membuatmu senang?";
+  }
+  if (/^(?:i|we)\s+(?:passed\s+(?:my|the)\s+(?:exam|test|interview)|(?:feel|am)\s+(?:really\s+)?(?:happy|great|excited)(?:\s+today)?|got\s+accepted)\b/i.test(text)) {
+    return "That's good news! Thanks for sharing it. What part of today are you most pleased about?";
+  }
+  return null;
 }
