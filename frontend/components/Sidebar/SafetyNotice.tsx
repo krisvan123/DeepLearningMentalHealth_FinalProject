@@ -12,7 +12,7 @@ export const SafetyNotice: React.FC = () => {
         This application is an academic/research prototype and is not a substitute for professional mental-health care or emergency services.
       </p>
       <div className="pt-1 text-[11px] text-mono-500 border-t border-mono-200">
-        Emergency lifelines: <span className="font-semibold text-mono-800">988</span> (US/CA) • <span className="font-semibold text-mono-800">119</span> (ID) • <span className="font-semibold text-mono-800">112</span> (EU)
+        Emergency lifelines: <span className="font-semibold text-mono-800">988</span> (US/CA) • <span className="font-semibold text-mono-800">119 ext. 8</span> (Healing119.id / ID) • <span className="font-semibold text-mono-800">112</span> (EU)
       </div>
     </div>
   );
