@@ -43,7 +43,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               Immediate Confidential Resources
             </div>
             <div>• US &amp; Canada: Call or text <b className="text-black">988</b> (24/7 Lifeline)</div>
-            <div>• Indonesia: Hubungi <b className="text-black">119 ext. 8</b> (SEJIWA)</div>
+            <div>• Indonesia: Hubungi <b className="text-black">119 ext. 8</b> (Healing119.id)</div>
             <div>• Global: Visit <b className="text-black">findahelpline.com</b></div>
           </div>
 
