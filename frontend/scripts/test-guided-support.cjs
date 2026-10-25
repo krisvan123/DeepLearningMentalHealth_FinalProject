@@ -22,7 +22,7 @@ const scenarios = [
   ["I'm nervous about my interview tomorrow", "Interview preparation", "introduction"],
   ["I am overwhelmed by assignments", "Overwhelm and workload", "ten minutes"],
   ["Aku lagi ada masalah dengan keluarga", "Family tension", "waktu yang lebih tenang"],
-  ["I feel lonely recently", "Loneliness", "message"],
+  ["I feel lonely recently", "Loneliness", "messaging"],
   ["I can't sleep at night", "Sleep difficulties", "wind-down routine"],
   ["I feel guilty after eating food", "Difficult feelings around food", "don't need"],
   ["I'm sad and empty lately", "Low mood", "gentle activity"],
