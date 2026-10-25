@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Message, ModelStatus } from "@/lib/types";
-import { getModelStatus, sendMessage } from "@/lib/api";
+import { getBrowserModelStatus, sendBrowserMessage } from "@/lib/browser-inference";
 import { APP_NAME, APP_SUBTITLE } from "@/lib/config";
 import { StatusIndicator } from "@/components/UI/StatusIndicator";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
@@ -21,13 +21,13 @@ export default function Home() {
   useEffect(() => {
     async function checkStatus() {
       try {
-        const status = await getModelStatus();
+        const status = await getBrowserModelStatus();
         setModelStatus(status);
       } catch {
         setModelStatus({
           status: "unavailable",
           model_ready: false,
-          model_error: "Inference server offline",
+          model_error: "Browser model could not load",
           architecture: "Bi-LSTM",
           task: "Multi-class Classification",
           num_classes: 8,
@@ -66,7 +66,7 @@ export default function Home() {
         role: m.role,
         content: m.content.slice(0, 1000),
       }));
-      const result = await sendMessage(userText, lastAssistant, history);
+      const result = await sendBrowserMessage(userText, lastAssistant, history);
 
       const assistantMessage: Message = {
         id: `asst-${Date.now()}`,
