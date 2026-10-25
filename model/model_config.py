@@ -25,7 +25,7 @@ class ModelConfig:
         class_labels: Optional[List[str]] = None,
         max_sequence_length: int = MAX_SEQUENCE_LENGTH,
         max_vocab_size: int = MAX_VOCAB_SIZE,
-        embedding_dim: int = EMBDING_DIM if "EMBDING_DIM" in locals() else EMBEDDING_DIM,
+        embedding_dim: int = EMBEDDING_DIM,
         lstm_units: int = LSTM_UNITS,
         confidence_threshold: float = CONFIDENCE_THRESHOLD,
         framework: str = "TensorFlow / Keras",
