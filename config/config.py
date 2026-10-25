@@ -27,7 +27,7 @@ STYLESHEET_PATH: Path = ASSETS_DIR / "styles.css"
 APP_NAME: str = "MINDCARE"
 APP_SUBTITLE: str = "Mental Health Support Assistant"
 APP_DESCRIPTION: str = (
-    "A research-grade Deep Learning text classification system designed to recognize "
+    "An academic Deep Learning text classification prototype designed to explore "
     "the context of user reflections and provide controlled, empathetic responses."
 )
 SYSTEM_VERSION: str = "1.0.0"
