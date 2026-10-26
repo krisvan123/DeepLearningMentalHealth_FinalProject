@@ -294,14 +294,24 @@ export function createGuidedSupport(
 
   // Use the previous user topic only for short, recognisable follow-ups.
   // A brand-new topic must never be contaminated by an old conversation.
-  const previous = [...history].reverse().find((item) => item.role === "user")?.content || "";
-  const mayContinue = current.split(/\s+/).length <= 14 && followUp.test(current);
-  if (!topic && mayContinue && previous) {
-    topic = TOPICS.find((item) => item.match.test(previous));
+  const priorUserMessages = history
+    .filter((item) => item.role === "user" && typeof item.content === "string")
+    .slice(-4).reverse().map((item) => item.content.slice(0, 600));
+  const previous = priorUserMessages[0] || "";
+  const explicitTopicChange = /\b(ganti topik|lain cerita|beda masalah|different issue|change the topic|another problem|new topic)\b/i.test(current);
+  const mayContinue = !explicitTopicChange && current.split(/\s+/).length <= 14 && followUp.test(current);
+  if (!topic && mayContinue) {
+    // Locate the nearest relevant user-described situation. Assistant answers
+    // are deliberately excluded to avoid carrying forward its own mistakes.
+    const earlierIssue = priorUserMessages.find((text) =>
+      TOPICS.some((item) => item.match.test(text))
+    );
+    if (earlierIssue) topic = TOPICS.find((item) => item.match.test(earlierIssue));
   }
   if (!topic) return null;
 
-  const indonesia = idMarkers.test(current) || (mayContinue && idMarkers.test(previous));
+  const indonesia = idMarkers.test(current) ||
+    (mayContinue && priorUserMessages.some((text) => idMarkers.test(text)));
   const reply = indonesia ? topic.id : topic.en;
   // The user has indicated the initial step did not help, or the previous
   // assistant answer already suggested it. Avoid repeating the same advice.
