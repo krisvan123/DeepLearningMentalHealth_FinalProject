@@ -3,6 +3,7 @@ import { Plus, X, Cpu, Info, Shield, Code } from "lucide-react";
 import { Button } from "../UI/Button";
 import { ModelStatus } from "./ModelStatus";
 import { SafetyNotice } from "./SafetyNotice";
+import { SupportResources } from "./SupportResources";
 import { ModelStatus as ModelStatusType } from "@/lib/types";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/config";
 
@@ -117,6 +118,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Show research category scores and inference details. Scores are not a diagnosis.
             </p>
           </div>
+
+          <SupportResources />
 
           {/* Safety Notice */}
           <div className="pt-2">
