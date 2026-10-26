@@ -17,7 +17,15 @@ export type IntentRoute = {
 };
 
 const idWords = /\b(aku|saya|gue|gw|kamu|tolong|bantu|nggak|enggak|gak|tidak|kenapa|bagaimana|gimana|harus|sudah|udah|makasih|terima kasih|cemas|sedih|perasaan|pikiran|stres|takut|konselor|psikolog|dokter|bukan|itu|maksudku|nyambung|jawabannya|cara|mengatasi|depresi|gangguan|pengobatan|oke)\b/i;
-const languageOf = (text: string, previous = "") => idWords.test(text) || (text.trim().split(/\s+/).length <= 6 && idWords.test(previous)) ? "id" : "en";
+const enWords = /\b(i|i'm|i've|my|me|you|your|the|what|why|how|where|are|am|is|today|exhausted|tired|feel|feeling|please|thanks|thank|great|happy|sad|worry|anxious|work|stress|sleep|job|interview|because|help)\b/i;
+const languageOf = (text: string, previous = ""): "id" | "en" => {
+  // Explicit language in the current turn always wins. Past messages should
+  // NEVER force an English question to receive an Indonesian answer.
+  if (idWords.test(text)) return "id";
+  if (enWords.test(text)) return "en";
+  const shortReply = /^(?:yes|ok|okay|sure|next|lanjut|iya|ya|baik|terus)[.!?\s]*$/i.test(text);
+  return shortReply && idWords.test(previous) ? "id" : "en";
+};
 
 const correction = /\b(kamu (?:salah|keliru)|bukan itu(?: maksudku)?|jawaban(?:mu)? (?:nggak|gak|tidak) nyambung|nggak nyambung|gak nyambung|you (?:got it wrong|misunderstood)|that's not what i meant|not what i meant|that doesn't answer|you are not listening)\b/i;
 const listening = /\b(jangan (?:kasih|beri|ngasih) (?:saran|solusi)|cuma (?:mau|pengen|ingin) (?:cerita|curhat|didengerin)|aku (?:mau|pengen|ingin) (?:curhat|cerita aja|didengar)|just (?:want|need) (?:to vent|someone to listen|you to listen)|don't (?:give|want) advice|no advice)\b/i;
@@ -29,7 +37,7 @@ const treatmentRequest = /\b(?:(?:cara|bagaimana cara) (?:mengobati|menangani|me
 const askHelp = /\b(tolong|bantu|butuh saran|kasih solusi|berikan solusi|apa yang harus|harus gimana|gimana caranya|what should i do|need advice|any advice|help me|can you help|how can i cope)\b/i;
 const rejectSuggestion = /\b(udah|sudah|telah|already|i tried|i've tried|didn't work|doesn't work|didn't help|gak membantu|nggak membantu|tidak membantu|masih sulit|belum berhasil)\b/i;
 const greetingsOnly = /^(?:iya|ya|oke|ok|okay|yes|sure|baik|lanjut|tell me more|go on|terus|next)[!?.\s]*$/i;
-const simpleEmotion = /^(?:(?:aku|saya|gue|gw)(?:\s+(?:merasa|lagi))?\s+|i(?:'m| am| feel)?\s+|i'm feeling\s+|i am feeling\s+)?(?:capek|lelah|sedih|takut|cemas|bingung|marah|kesal|bosan|tired|sad|upset|afraid|confused|exhausted|fine|okay|not okay)(?:\s+(?:banget|sekali|hari ini|today|lately|right now))?[.! ]*$/i;
+const simpleEmotion = /^(?:(?:aku|saya|gue|gw)(?:\s+(?:merasa|lagi))?\s+|i(?:'m| am| feel)?\s+|i'm feeling\s+|i am feeling\s+)?(?:capek|lelah|sedih|takut|cemas|bingung|marah|kesal|bosan|tired|sad|upset|afraid|confused|exhausted|fine|okay|not okay)(?:\s+(?:banget|sekali))?(?:\s+(?:hari ini|today|lately|right now))?[.! ]*$/i;
 const generalKnowledge = /^(?:what is (?:python|machine learning|the capital|the weather|an algorithm)|who is the |berapa (?:ibukota|hasil|cuaca)|apa (?:itu python|ibu kota)|write (?:code|a program)|buatkan (?:kode|program))\b/i;
 const positiveOrdinary = /^(?:i (?:love|like) (?:food|music|movies|my family)|i slept well|today i (?:went to|had|visited)|aku (?:suka|senang) (?:makanan|musik|film)|aku tidur nyenyak|hari ini aku (?:pergi|makan|belajar))\b/i;
 const explicitUncertainty = /\b(aku (?:bingung|tidak tahu) harus|i don't know what to do|aku butuh bantuan|i need help)\b/i;
@@ -149,8 +157,8 @@ export function routeConversation(
     return {
       method: "support", topic: "Emotional check-in",
       response: id
-        ? "Makasih sudah bilang. Aku tidak akan langsung menyimpulkan penyebabnya. Kamu mau cerita apa yang membuatmu merasa begitu, atau lebih nyaman kalau aku bantu cari satu langkah kecil?"
-        : "Thanks for telling me. I won't jump to conclusions about why you feel this way. Would you rather tell me what happened or explore one small next step?",
+        ? "Kedengarannya kamu lagi merasakan sesuatu yang cukup berat. Aku nggak mau menebak penyebabnya. Mau cerita apa yang terjadi hari ini, atau kamu lebih butuh didengarkan dulu?"
+        : "It sounds like you're having a difficult moment. I don't want to assume the reason. Would you like to share what happened today, or would it help if I simply listened?",
     };
   }
 
