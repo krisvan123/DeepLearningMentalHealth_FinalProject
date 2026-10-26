@@ -18,6 +18,30 @@ pinned: false
 
 ---
 
+## Final Project — Research and Submission Readiness (26 October 2026)
+
+The Vercel frontend runs the original Bi-LSTM in the browser. Old API proxy
+diagrams later in this README are legacy architecture notes.
+
+- / — context-guided chat (rule responses are distinct from neural inference).
+- /analysis — direct, actual 8-class Bi-LSTM laboratory with numeric scores.
+- /research — methodology, dataset provenance status and historical evaluation.
+- research/dataset_manifest.json — all original data rights still UNVERIFIED.
+- scripts/compare_models.py — LSTM/Bi-LSTM comparison; blocks if permission
+  evidence or original CSV files are missing.
+- scripts/publish_experiment.py — publishes only verified numeric metrics.
+- docs/FINAL_REPORT_DRAFT.md — report draft with flagged evidence gaps.
+- docs/DEMO_VIDEO_PLAN.md — timed, realistic demonstration storyboard.
+- docs/SUBMISSION_CHECKLIST.md — exact ready / not-ready checklist.
+- GitHub Actions produces a clearly labeled PDF DRAFT, not a final submission.
+
+Historical model metadata: 8,000 samples, training accuracy 77.31%, validation
+accuracy 74.50%. Holdout F1 and confusion matrix are NOT reported in the
+original artifact. The model has not been retrained and cannot diagnose or
+provide medical treatment.
+
+---
+
 ## 1. Project Overview
 
 **MindCare** is an academic Deep Learning application built with a modern **Next.js + React + TypeScript + Tailwind CSS** frontend deployed on **Vercel**. The deployment now uses an exported **TensorFlow.js Bi-LSTM model running inside visitors' browsers**, eliminating dependency on a laptop-hosted LocalTunnel. The FastAPI + TensorFlow inference backend remains available for local experiments, but is not required for the public website.
