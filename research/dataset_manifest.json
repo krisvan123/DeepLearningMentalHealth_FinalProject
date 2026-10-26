@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "project": "MindCare",
+  "ethics_note": "Dataset source rights are unverified. Never commit raw sensitive user text.",
+  "entries": [
+    {
+      "label": "Addiction",
+      "path": "dataset_chat/FullAddiction.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Anxiety",
+      "path": "dataset_chat/FullAnxiety.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Depression",
+      "path": "dataset_chat/FullDepression.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Eating Disorder",
+      "path": "dataset_chat/FullEatingDisorder.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Suicide",
+      "path": "dataset_chat/FullSuicide.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Neutral",
+      "path": "daily_chat/train.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "Greeting",
+      "path": "daily_chat/train.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    },
+    {
+      "label": "OOD",
+      "path": "worng_context/train.csv",
+      "source_url": null,
+      "license_or_permission": null,
+      "permission_status": "unverified",
+      "notes": "Actual dataset origin and rights not verified."
+    }
+  ]
+}
