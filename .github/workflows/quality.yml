@@ -39,4 +39,6 @@ jobs:
         run: node scripts/test-guided-support.cjs
       - name: Test comprehensive bilingual conversational routing
         run: node scripts/test-conversation-engine.cjs
+      - name: Test six real-user demo regressions and chat layout
+        run: node scripts/test-demo-readiness.cjs
       - run: npm run build
