@@ -45,12 +45,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="w-full">
-      {/* Processing is shown in the chat as an assistant typing bubble. */}
+    <div className="w-full min-w-0">
+      {/* Keep draft editing available even while the model is responding. */}
+      {isLoading && (
+        <p className="mb-2 px-1 text-[11px] text-mono-500" aria-live="polite">
+          MindCare is replying — you can keep writing your next message.
+        </p>
+      )}
 
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-end gap-3 p-2 sm:p-2.5 bg-white border border-mono-300 rounded-2xl focus-within:border-black focus-within:ring-1 focus-within:ring-black transition-all shadow-sm"
+        className="relative flex items-end min-w-0 gap-3 p-2 sm:p-2.5 bg-white border border-mono-300 rounded-2xl focus-within:border-black focus-within:ring-1 focus-within:ring-black transition-all shadow-sm"
       >
         <textarea
           ref={textareaRef}
@@ -59,8 +64,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onKeyDown={handleKeyDown}
           placeholder="Share what's on your mind..."
           rows={1}
-          disabled={disabled || isLoading}
-          className="w-full resize-none border-0 bg-transparent py-1.5 px-3 text-sm text-mono-900 placeholder:text-mono-400 focus:outline-none focus:ring-0 max-h-36 disabled:opacity-50 leading-relaxed"
+          disabled={disabled}
+          className="w-full min-w-0 min-h-[24px] resize-none border-0 bg-transparent py-1.5 px-3 text-sm text-mono-900 placeholder:text-mono-400 focus:outline-none focus:ring-0 max-h-36 overflow-y-auto disabled:opacity-50 leading-relaxed"
           aria-label="User reflection input"
         />
 
