@@ -6,8 +6,9 @@
  * Predictions are research categories, not diagnoses.
  */
 import type { ChatResponse, ChatTurn, ModelStatus } from "./types";
-import { recognizeSocialOpening, socialOpeningReply } from "./conversation-intents";
-import { createGuidedSupport, generalSupportForClass, positiveCheckinReply } from "./guided-support";
+import { recognizeSocialOpening } from "./conversation-intents";
+import { createGuidedSupport, generalSupportForClass } from "./guided-support";
+import { routeConversation, unclearMessageReply } from "./conversation-engine";
 import type * as TF from "@tensorflow/tfjs";
 
 type RuntimeConfig = {
@@ -187,31 +188,23 @@ export async function sendBrowserMessage(
     };
   }
 
-  // A greeting is a social opening, not a mental-health diagnosis. Short-
-  // circuit the classifier and do not invent a neural-network probability.
-  const socialAnswer = socialOpeningReply(message);
-  if (socialAnswer) {
+  // Human-readable conversation intent comes before the statistical label.
+  // For clear greetings, corrections, questions about care and ambiguous
+  // requests, do NOT use a classifier score as proof of understanding.
+  const turn = routeConversation(message, history, lastResponse);
+  if (turn && turn.method !== "guided") {
     return {
-      response: socialAnswer,
-      predicted_class: "Greeting", response_source: "social",
+      response: turn.response,
+      response_source: turn.method,
+      support_topic: turn.topic,
+      predicted_class: turn.method === "social" ? "Neutral" : undefined,
       is_high_risk: false,
       is_ood: false,
     };
   }
-
-  const positiveReply = positiveCheckinReply(message);
-  if (positiveReply) {
-    return {
-      response: positiveReply,
-      response_source: "social",
-      support_topic: "Positive check-in",
-      predicted_class: "Neutral",
-      is_high_risk: false,
-      is_ood: false,
-    };
-  }
-
-  const guided = createGuidedSupport(message, history, lastResponse);
+  const guided = turn?.method === "guided"
+    ? { response: turn.response, topic: turn.topic }
+    : createGuidedSupport(message, history, lastResponse);
   let runtime: Runtime;
   try {
     runtime = await loadRuntime();
@@ -258,21 +251,34 @@ export async function sendBrowserMessage(
   // Bi-LSTM category remains available for research inspection, but is NOT
   // represented as a clinical diagnosis or the source of guided advice.
   // Independent safety cues and classified crisis support remain higher priority.
-  const useGuidance = Boolean(guided) && predictedClass !== "Suicide";
+  const hasIndependentSafetyCue = safetyCue(message);
+  // A neural label by itself is not a diagnosis or a reliable risk assessment.
+  // Explicit safety cues are handled above; an unexpected classification
+  // gets a gentle check-in rather than an alarming crisis declaration.
+  const modelOnlyRisk = predictedClass === "Suicide" && !hasIndependentSafetyCue;
+  const useGuidance = Boolean(guided) && !hasIndependentSafetyCue;
+  const nonspecific = !guided && !/\b(i|i'm|i've|my|me|aku|saya|gue|gw|merasa|feeling|feel|sad|anxious|worry|worried|stress|stres|cemas|takut|sedih|lonely|kesepian|trouble|difficult|sulit)\b/i.test(message);
+  const cautiousReply = modelOnlyRisk
+    ? (languageMarkers.test(message)
+      ? "Aku ingin memahami situasimu lebih baik tanpa membuat asumsi. Kalau kamu merasa tidak aman saat ini, hubungi orang dewasa tepercaya atau layanan bantuan setempat. Apa yang sedang kamu rasakan?"
+      : "I'd like to understand your situation without assuming a diagnosis. If you feel unsafe right now, contact a trusted person or local support service. What are you feeling?")
+    : nonspecific || confidence < 0.55
+      ? unclearMessageReply(message)
+      : null;
   return {
     response: useGuidance && guided
       ? guided.response
-      : chooseResponse(predictedClass, message, lastResponse, history, config),
-    response_source: useGuidance ? "guided" : "model",
+      : cautiousReply || chooseResponse(predictedClass, message, lastResponse, history, config),
+    response_source: useGuidance ? "guided" : cautiousReply ? "clarify" : "model",
     support_topic: useGuidance ? guided?.topic : undefined,
     predicted_class: predictedClass,
     confidence: knownTheme ? undefined : confidence,
-    is_high_risk: predictedClass === "Suicide",
+    is_high_risk: false, // Only independent explicit cues trigger crisis layout.
     is_ood: predictedClass === "OOD",
     latency_ms: performance.now() - t0,
     // Rule overrides do not have a corresponding neural confidence or
     // probability distribution; never show a contradictory developer panel.
-    probabilities: knownTheme || useGuidance ? undefined :
+    probabilities: knownTheme || useGuidance || Boolean(cautiousReply) ? undefined :
       Object.fromEntries(config.classes.map((category, index) => [category, scores[index]])),
   };
 }
