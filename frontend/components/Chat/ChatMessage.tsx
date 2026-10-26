@@ -143,7 +143,9 @@ const DeveloperCard: React.FC<{ message: Message }> = ({ message }) => {
           <span className="font-medium text-right">
             {message.response_source === "guided" ? "Topic-guided coping suggestions"
               : message.response_source === "model" ? "Bi-LSTM + controlled response"
-              : message.response_source === "social" ? "Social greeting rule"
+              : message.response_source === "social" ? "Social / everyday response"
+              : message.response_source === "support" ? "Non-clinical support information"
+              : message.response_source === "clarify" ? "Context clarification"
               : "Safety support"}
           </span>
         </div>
@@ -157,7 +159,7 @@ const DeveloperCard: React.FC<{ message: Message }> = ({ message }) => {
       {message.predicted_class && (
         <div className="flex justify-between items-center">
           <span className="text-mono-500">
-            {message.response_source === "guided" ? "Bi-LSTM class (not used for reply):" : "Predicted Class:"}
+            {message.response_source === "guided" ? "Academic model category (not diagnosis):" : "Academic model category:"}
           </span>
           <span className="font-bold text-mono-900">
             {message.predicted_class}
@@ -168,7 +170,7 @@ const DeveloperCard: React.FC<{ message: Message }> = ({ message }) => {
 
       {message.confidence !== undefined && (
         <div className="flex justify-between items-center">
-          <span className="text-mono-500">Confidence Score:</span>
+          <span className="text-mono-500">Model class score (not a diagnosis):</span>
           <span className="font-semibold text-mono-800">
             {(message.confidence * 100).toFixed(1)}% ({message.confidence.toFixed(4)})
           </span>
