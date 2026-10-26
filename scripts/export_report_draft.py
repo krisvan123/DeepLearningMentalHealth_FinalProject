@@ -60,28 +60,46 @@ def main():
         Paragraph("Dataset sources and licenses, final experiments, team attribution and video evidence are still required.",body),
         PageBreak()]
     started=False
+    paragraph=[]
+    def flush():
+        if paragraph:
+            story.append(Paragraph(text(" ".join(paragraph)),body))
+            paragraph.clear()
     for raw in source.splitlines():
         line=raw.strip()
-        if not line:continue
+        if not line:
+            flush()
+            continue
         if line=="---":
+            flush()
             story.append(Spacer(1,6))
         elif line.startswith("# "):
-            continue
+            flush()
         elif line.startswith("## "):
-            if started:story.append(PageBreak())
-            story.append(Paragraph(text(line[3:]),heading))
+            flush()
+            section=line[3:]
+            # Let short appendices flow rather than creating nearly empty pages.
+            if started and not section.startswith(("1. Introduction","Appendix B.","Appendix C.")):
+                story.append(PageBreak())
+            story.append(Paragraph(text(section),heading))
             started=True
         elif line.startswith("### "):
+            flush()
             story.append(Spacer(1,5))
             story.append(Paragraph(text(line[4:]),subheading))
         elif line.startswith("|"):
-            if "---" not in line:story.append(Paragraph(text(line.replace("|"," • ")),small))
+            flush()
+            if "---" not in line:
+                story.append(Paragraph(text(line.replace("|"," • ")),small))
         elif line.startswith("- ") or re.match(r"^\d+\.\s",line):
+            flush()
             story.append(Paragraph("• "+text(re.sub(r"^(?:-|\d+\.)\s+","",line)),body))
         elif line.startswith(">"):
+            flush()
             story.append(Paragraph(text(line[1:].strip()),small))
         else:
-            story.append(Paragraph(text(line),body))
+            paragraph.append(line)
+    flush()
     args.output.parent.mkdir(parents=True,exist_ok=True)
     doc.build(story,onFirstPage=footer,onLaterPages=footer)
     print("Created DRAFT PDF:",args.output)
