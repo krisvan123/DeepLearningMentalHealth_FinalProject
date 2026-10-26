@@ -56,7 +56,7 @@ const TOPICS: TopicSpec[] = [
   },
   {
     key: "workload", title: "Overwhelm and workload",
-    match: /\b(deadlines?|assignments?|overwhelmed|burn(?:ed|t)?\s*out|too much work|banyak tugas|tugas numpuk|keteteran|kewalahan|burnout)\b/i,
+    match: /\b(deadlines?|assignments?|overwhelmed|burn(?:ed|t)?\s*out|too much work|banyak tugas|tugas(?:\s+\w+){0,3}\s+(?:numpuk|menumpuk)|tugas numpuk|keteteran|kewalahan|burnout)\b/i,
     id: {
       intro: "Kalau banyak hal datang bersamaan, wajar kalau sulit menentukan harus mulai dari mana.",
       first: "Tulis semua tugas, lalu tandai satu yang paling dekat tenggat atau paling penting. Pecah menjadi langkah pertama yang bisa dikerjakan sekitar sepuluh menit.",
