@@ -41,7 +41,7 @@ def main():
                 "parameters": models[name]["parameters"],
                 "holdout": {
                     metric: models[name]["holdout"][metric]
-                    for metric in ("accuracy","macro_f1","confusion_matrix")
+                    for metric in ("accuracy","macro_f1","confusion_matrix","per_class")
                 },
                 "training_history": models[name]["training_history"]
             } for name in ("LSTM_baseline","BiLSTM")
