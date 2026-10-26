@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </label>
             </div>
             <p className="text-[11px] text-mono-500">
-              Show prediction class, confidence score, and inference latency.
+              Show research category scores and inference details. Scores are not a diagnosis.
             </p>
           </div>
 
