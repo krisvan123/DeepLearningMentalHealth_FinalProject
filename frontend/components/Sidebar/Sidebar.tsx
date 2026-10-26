@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import { BarChart3, Database } from "lucide-react";
 import { Plus, X, Cpu, Info, Shield, Code } from "lucide-react";
 import { Button } from "../UI/Button";
 import { ModelStatus } from "./ModelStatus";
@@ -76,6 +78,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span>New conversation</span>
             </Button>
           </div>
+
+          {/* Academic pages: separate raw model predictions from chat rules. */}
+          <nav aria-label="Project research pages" className="space-y-2">
+            <Link href="/analysis" onClick={onClose} className="flex gap-2 items-center rounded-lg border border-mono-200 bg-white px-3 py-2.5 text-sm font-medium hover:border-black"><BarChart3 className="w-4 h-4"/> Model Analysis</Link>
+            <Link href="/research" onClick={onClose} className="flex gap-2 items-center rounded-lg border border-mono-200 bg-white px-3 py-2.5 text-sm font-medium hover:border-black"><Database className="w-4 h-4"/> Dataset &amp; Results</Link>
+          </nav>
 
           {/* About Section */}
           <div className="space-y-2">

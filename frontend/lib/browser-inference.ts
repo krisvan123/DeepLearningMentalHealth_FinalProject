@@ -283,3 +283,44 @@ export async function sendBrowserMessage(
       Object.fromEntries(config.classes.map((category, index) => [category, scores[index]])),
   };
 }
+
+
+/** Direct neural inference for research demonstrations, without chat rules. */
+export type ResearchPrediction = {
+  predictedClass: string;
+  topScore: number;
+  belowThreshold: boolean;
+  latencyMs: number;
+  scores: Array<{ label: string; score: number }>;
+};
+
+export async function analyzeTextWithModel(text: string): Promise<ResearchPrediction> {
+  if (!text.trim() || text.length > 2000) {
+    throw new Error("Please enter 1–2000 characters.");
+  }
+  const { tf, model, config } = await loadRuntime();
+  const started = performance.now();
+  const input = tf.tensor2d([tokenize(text, config)], [1, config.max_length], "int32");
+  let output: TF.Tensor | null = null;
+  let values: number[];
+  try {
+    const prediction = model.predict(input);
+    output = Array.isArray(prediction) ? prediction[0] : prediction;
+    values = Array.from(await output.data());
+  } finally {
+    input.dispose();
+    output?.dispose();
+  }
+  if (values.length !== config.classes.length || values.some(value => !Number.isFinite(value) || value < 0)) {
+    throw new Error("Invalid output from the Bi-LSTM model.");
+  }
+  const ranked = config.classes.map((label, index) => ({ label, score: values[index] }))
+    .sort((a,b) => b.score-a.score);
+  return {
+    predictedClass: ranked[0].label,
+    topScore: ranked[0].score,
+    belowThreshold: ranked[0].score < config.threshold,
+    latencyMs: performance.now()-started,
+    scores: ranked,
+  };
+}
