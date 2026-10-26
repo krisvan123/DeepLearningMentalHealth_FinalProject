@@ -10,7 +10,7 @@ import type { ChatTurn } from "./types";
 type TopicKey =
   | "interview" | "exam" | "workload" | "family" | "friendship"
   | "sleep" | "loneliness" | "grief" | "money" | "food"
-  | "habits" | "low_mood" | "anxiety" | "stress";
+  | "habits" | "low_mood" | "anxiety" | "work_stress" | "stress";
 
 type Reply = { intro: string; first: string; alternative: string; question: string };
 type TopicSpec = {
@@ -56,7 +56,7 @@ const TOPICS: TopicSpec[] = [
   },
   {
     key: "workload", title: "Overwhelm and workload",
-    match: /\b(deadlines?|assignments?|overwhelmed|burn(?:ed|t)?\s*out|too much work|banyak tugas|tugas numpuk|keteteran|kewalahan|kelelahan|capek banget|burnout)\b/i,
+    match: /\b(deadlines?|assignments?|overwhelmed|burn(?:ed|t)?\s*out|too much work|banyak tugas|tugas numpuk|keteteran|kewalahan|burnout)\b/i,
     id: {
       intro: "Kalau banyak hal datang bersamaan, wajar kalau sulit menentukan harus mulai dari mana.",
       first: "Tulis semua tugas, lalu tandai satu yang paling dekat tenggat atau paling penting. Pecah menjadi langkah pertama yang bisa dikerjakan sekitar sepuluh menit.",
@@ -231,6 +231,22 @@ const TOPICS: TopicSpec[] = [
     },
   },
   {
+    key: "work_stress", title: "Stress at work",
+    match: /\b(work|office|boss|coworkers?|workplace|job|kerja|pekerjaan|kantor|atasan|rekan kerja)\b/i,
+    id: {
+      intro: "Tekanan pekerjaan bisa menguras energi, apalagi kalau banyak tuntutan datang bersamaan.",
+      first: "Coba kenali satu hal dari pekerjaan yang paling membuatmu tertekan. Jika memungkinkan, tentukan batas yang realistis atau diskusikan prioritas tugas dengan orang yang tepat di tempat kerja.",
+      alternative: "Kalau sudah mencoba mengatur prioritas tetapi tekanan masih berat, pertimbangkan meminta dukungan dari rekan atau atasan yang aman diajak bicara, atau berkonsultasi bila ini mengganggu keseharian.",
+      question: "Tekanan paling berat berasal dari banyaknya pekerjaan, hubungan dengan rekan, atau ekspektasi atasan?",
+    },
+    en: {
+      intro: "Work pressure can be draining when expectations pile up.",
+      first: "Identify one work situation creating the most pressure. If possible, set a realistic boundary or clarify priorities with the appropriate person at work.",
+      alternative: "If prioritizing hasn't helped, consider seeking support from a trusted colleague or supervisor, or professional support if this is affecting daily life.",
+      question: "Is most of the pressure from workload, relationships with colleagues, or expectations?",
+    },
+  },
+  {
     key: "stress", title: "Everyday stress",
     match: /\b(stress(?:ed)?|pressure|frustrated|stres|tertekan|beban pikiran|pusing banget|cape banget)\b/i,
     id: {
@@ -253,7 +269,7 @@ const TOPICS: TopicSpec[] = [
 const topicPriority: TopicKey[] = [
   "grief", "food", "sleep", "interview", "exam", "loneliness",
   "habits", "family", "friendship", "money", "workload",
-  "low_mood", "anxiety", "stress",
+  "work_stress", "low_mood", "anxiety", "stress",
 ];
 
 function findTopic(text: string): TopicSpec | undefined {
@@ -330,9 +346,16 @@ export function createGuidedSupport(
   // assistant answer already suggested it. Avoid repeating the same advice.
   const backup = triedAlready.test(current) ||
     Boolean(lastResponse && lastResponse.includes(reply.first));
+  // If the first step failed or was already proposed, don't repeat the
+  // exact same intro + question. Ask what was attempted instead.
   return {
-    response: reply.intro + "\n\n" + (backup ? reply.alternative : reply.first) +
-      "\n\n" + reply.question,
+    response: backup
+      ? (indonesia
+        ? "Kalau saran sebelumnya belum cocok, tidak perlu dipaksakan.\n\n" +
+          reply.alternative + "\n\nBagian mana yang sudah kamu coba, dan apa yang masih terasa sulit?"
+        : "If the earlier suggestion didn't fit, there's no need to force it.\n\n" +
+          reply.alternative + "\n\nWhat have you tried, and what still feels difficult?")
+      : reply.intro + "\n\n" + reply.first + "\n\n" + reply.question,
     topic: topic.title,
     language: indonesia ? "id" : "en",
   };
