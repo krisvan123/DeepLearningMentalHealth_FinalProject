@@ -14,7 +14,7 @@ export interface Message {
   latency_ms?: number;
   probabilities?: Record<string, number>;
   error_detail?: string;
-  response_source?: "guided" | "model" | "social" | "safety";
+  response_source?: "guided" | "model" | "social" | "safety" | "support" | "clarify" | "support" | "clarify";
   support_topic?: string;
   /** True while MindCare is preparing the response. */
   isTyping?: boolean;
