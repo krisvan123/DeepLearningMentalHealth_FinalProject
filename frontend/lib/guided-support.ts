@@ -248,6 +248,19 @@ const TOPICS: TopicSpec[] = [
   },
 ];
 
+// Prefer the most specific situation when a sentence mentions two subjects.
+// Example: "my friend passed away" is grief, NOT a friendship dispute.
+const topicPriority: TopicKey[] = [
+  "grief", "food", "sleep", "interview", "exam", "loneliness",
+  "habits", "family", "friendship", "money", "workload",
+  "low_mood", "anxiety", "stress",
+];
+
+function findTopic(text: string): TopicSpec | undefined {
+  return TOPICS.filter((topic) => topic.match.test(text))
+    .sort((a, b) => topicPriority.indexOf(a.key) - topicPriority.indexOf(b.key))[0];
+}
+
 const personalSignal = /\b(i|i'm|i've|i’m|my|me|we|aku|saya|gue|gw|ku|lagi|susah|gak|nggak|enggak|tidak|takut|besok|merasa|butuh|tolong|please|help|what should i do|gimana caranya|bagaimana caranya|harus gimana|can you help)\b/i;
 const questionForHelp = /\b(what should i do|how do i cope|how can i|can you help|need help|any advice|what can i do|harus gimana|gimana caranya|bagaimana caranya|tolong|bantu|saran|cara mengatasi|solusinya)\b/i;
 const followUp = /^(?:and |but |because |what should i do|what can i do|how|why|still |i tried|i've tried|i already tried|that didn't|that's not|it didn't|it doesn't|apa|gimana|bagaimana|kenapa|tapi |karena |masih |udah |sudah |aku sudah |aku udah |terus |lalu |jadi |enggak |gak |nggak )/i;
@@ -271,7 +284,7 @@ export function createGuidedSupport(
 
   const directlyRelevant = personalSignal.test(current) ||
     questionForHelp.test(current);
-  let topic = directlyRelevant ? TOPICS.find((item) => item.match.test(current)) : undefined;
+  let topic = directlyRelevant ? findTopic(current) : undefined;
 
   // A happy result is not a stress disclosure. Do not offer exam anxiety
   // advice when someone is celebrating passing an exam or interview.
@@ -306,7 +319,7 @@ export function createGuidedSupport(
     const earlierIssue = priorUserMessages.find((text) =>
       TOPICS.some((item) => item.match.test(text))
     );
-    if (earlierIssue) topic = TOPICS.find((item) => item.match.test(earlierIssue));
+    if (earlierIssue) topic = findTopic(earlierIssue);
   }
   if (!topic) return null;
 
