@@ -22,6 +22,8 @@ const languageOf = (text: string, previous = "") => idWords.test(text) || (text.
 const correction = /\b(kamu (?:salah|keliru)|bukan itu(?: maksudku)?|jawaban(?:mu)? (?:nggak|gak|tidak) nyambung|nggak nyambung|gak nyambung|you (?:got it wrong|misunderstood)|that's not what i meant|not what i meant|that doesn't answer|you are not listening)\b/i;
 const listening = /\b(jangan (?:kasih|beri|ngasih) (?:saran|solusi)|cuma (?:mau|pengen|ingin) (?:cerita|curhat|didengerin)|aku (?:mau|pengen|ingin) (?:curhat|cerita aja|didengar)|just (?:want|need) (?:to vent|someone to listen|you to listen)|don't (?:give|want) advice|no advice)\b/i;
 const thanks = /^(?:terima kasih|makasih|makasi|thanks|thank you|thx)(?:\s+(?:ya|banget|so much|a lot))?[.! ]*$/i;
+const existingDiagnosis = /\b(?:(?:aku|saya|gue|gw) (?:sudah |pernah )?(?:didiagnosis|dinyatakan) (?:mengalami |dengan )?(?:depresi|gangguan kecemasan|bipolar|gangguan makan)|i (?:was|have been|am) diagnosed with (?:depression|anxiety|bipolar disorder|an eating disorder))\b/i;
+const careTrouble = /\b(?:(?:my|the) (?:therapy|counseling|treatment) (?:isn't|is not|hasn't been|doesn't seem to be) (?:working|helping)|(?:terapi|konseling|pengobatan) (?:belum|gak|nggak|tidak) (?:membantu|berhasil))\b/i;
 const diagnosisRequest = /\b(apakah aku (?:punya|mengalami|kena|terkena|mengidap)|apa aku (?:depresi|bipolar|anxiety|gangguan)|diagnos(?:e|is|ed)|do i have|am i (?:depressed|bipolar)|is this (?:depression|anxiety|a disorder)|what (?:disorder|illness) do i have|gangguan mental apa)\b/i;
 const treatmentRequest = /\b(?:(?:cara|bagaimana cara) (?:mengobati|menangani|mengatasi) (?:depresi|cemas|anxiety|stres|gangguan mental|gangguan makan|kecanduan)|(?:obat|pengobatan|terapi|penanganan) (?:untuk|buat) (?:depresi|cemas|anxiety|stres|gangguan mental|gangguan makan|kecanduan)|(?:how to treat|treatment for|how is) (?:depression|anxiety|panic|eating disorder|mental illness|addiction)|can (?:depression|anxiety|bipolar|mental illness) be treated)\b/i;
 const askHelp = /\b(tolong|bantu|butuh saran|kasih solusi|berikan solusi|apa yang harus|harus gimana|gimana caranya|what should i do|need advice|any advice|help me|can you help|how can i cope)\b/i;
@@ -84,6 +86,22 @@ export function routeConversation(
       response: id
         ? "Aku tidak bisa menentukan diagnosis lewat chat atau skor Bi-LSTM. Kalau gejalanya menetap atau mengganggu aktivitas, psikolog atau dokter dapat membantu menilai situasinya. Kamu bisa mulai dengan mencatat kapan perasaan itu muncul, seberapa sering, dan dampaknya pada keseharian. Mau ceritakan yang paling mengganggu?"
         : "I can't diagnose a condition from chat messages or a Bi-LSTM score. If symptoms persist or affect daily life, a qualified mental-health professional can assess what's happening. You could note when the feelings started, how often they occur, and how daily life is affected. What concerns you most?",
+    };
+  }
+  if (existingDiagnosis.test(current)) {
+    return {
+      method: "support", topic: "Living with a diagnosed condition",
+      response: id
+        ? "Terima kasih sudah berbagi hal itu. Diagnosis sebaiknya ditangani bersama profesional yang mengenal kondisimu. Jika sudah punya rencana perawatan, kamu bisa membicarakan perubahan gejala, kesulitan, atau pertanyaan yang muncul dengan tenaga kesehatan yang menangani. Kamu ingin membahas dukungan sehari-hari, atau cara menyampaikan kekhawatiran pada profesional?"
+        : "Thank you for sharing that. A diagnosed condition is best managed together with a qualified professional who knows your situation. If you already have a care plan, you can discuss changes, concerns, or difficulties with them. Would you rather talk about everyday support or how to raise concerns with your clinician?",
+    };
+  }
+  if (careTrouble.test(current)) {
+    return {
+      method: "support", topic: "Reviewing existing support",
+      response: id
+        ? "Kalau dukungan yang sedang dijalani belum terasa membantu, itu layak dibicarakan dengan profesional yang menanganimu agar pendekatannya bisa dievaluasi. Jangan mengubah pengobatan sendiri berdasarkan saran chatbot. Apa bagian yang belum sesuai dengan kebutuhanmu?"
+        : "If the support you're receiving doesn't seem helpful, tell your treating professional so they can review the approach with you. Don't change prescribed care based on a chatbot. What part hasn't been meeting your needs?",
     };
   }
   if (treatmentRequest.test(current)) {
