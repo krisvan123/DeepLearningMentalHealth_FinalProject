@@ -1,0 +1,27 @@
+"use strict";
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const root = path.resolve(__dirname,"..");
+const open = name=>fs.readFileSync(path.join(root,name),"utf8");
+const lab=open("app/analysis/page.tsx");
+const moduleSource=open("lib/browser-inference.ts");
+const research=open("app/research/page.tsx");
+const sidebar=open("components/Sidebar/Sidebar.tsx");
+const evidence=open("lib/research-evidence.ts");
+const experiments=open("components/Research/ExperimentResults.tsx");
+
+assert.match(lab,/analyzeTextWithModel\(input\.trim\(\)\)/);
+assert.match(moduleSource,/export async function analyzeTextWithModel/);
+const raw=moduleSource.slice(moduleSource.indexOf("export async function analyzeTextWithModel"));
+assert.match(raw,/model\.predict\(input\)/,"Laboratory must use raw Bi-LSTM neural prediction.");
+assert.doesNotMatch(raw,/routeConversation\(/,"Model laboratory must not substitute chat rules.");
+assert.match(lab,/not.*(health condition|diagnos)/i,"Research scores must be nonclinical.");
+assert.match(research,/not recorded/);
+assert.match(research,/source.*license/i);
+assert.match(sidebar,/href="\/analysis"/);
+assert.match(sidebar,/href="\/research"/);
+assert.match(experiments,/models\?\.LSTM_baseline/);
+assert.match(experiments,/confusion matrix/i);
+assert.match(evidence,/0\.7450000047683716/);
+console.log("Research UI smoke checks PASSED.");

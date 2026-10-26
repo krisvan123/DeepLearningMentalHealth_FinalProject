@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExperimentResults } from "@/components/Research/ExperimentResults";
 import { ArrowLeft, Database, FlaskConical, ShieldAlert, BarChart3 } from "lucide-react";
 import { RESEARCH_EVIDENCE as facts } from "@/lib/research-evidence";
 
@@ -40,6 +41,10 @@ export default function ResearchPage(){
             <p className="text-mono-600">Independent holdout accuracy: <strong>not recorded</strong>. Macro-F1: <strong>not recorded</strong>. Per-class precision/recall/F1: <strong>not recorded</strong>. Confusion matrix and training curves: <strong>not recorded</strong>.</p>
             <p className="text-mono-600">The current training script computes holdout classification results and confusion matrix when legally sourced datasets are supplied and training is run. A separate baseline experiment script is available, but no experiment comparison is claimed yet.</p>
           </div>
+        </section>
+        <section className="space-y-4" aria-label="Experimental model comparison">
+          <h2 className="font-bold text-xl">LSTM vs Bi-LSTM — executed experiments</h2>
+          <ExperimentResults />
         </section>
         <section className="space-y-4" aria-labelledby="dataset">
           <h2 id="dataset" className="font-bold text-xl inline-flex items-center gap-2"><Database className="w-5 h-5"/> Dataset &amp; provenance</h2>

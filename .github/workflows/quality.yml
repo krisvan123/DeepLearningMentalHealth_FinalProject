@@ -41,4 +41,6 @@ jobs:
         run: node scripts/test-conversation-engine.cjs
       - name: Test six real-user demo regressions and chat layout
         run: node scripts/test-demo-readiness.cjs
+      - name: Verify model analysis and dataset-evidence pages
+        run: node scripts/test-research-pages.cjs
       - run: npm run build
