@@ -197,7 +197,8 @@ export async function sendBrowserMessage(
       response: turn.response,
       response_source: turn.method,
       support_topic: turn.topic,
-      predicted_class: turn.method === "social" ? "Neutral" : undefined,
+      // No neural inference occurred for an intent-rule reply.
+      predicted_class: undefined,
       is_high_risk: false,
       is_ood: false,
     };
@@ -271,8 +272,8 @@ export async function sendBrowserMessage(
       : cautiousReply || chooseResponse(predictedClass, message, lastResponse, history, config),
     response_source: useGuidance ? "guided" : cautiousReply ? "clarify" : "model",
     support_topic: useGuidance ? guided?.topic : undefined,
-    predicted_class: predictedClass,
-    confidence: knownTheme ? undefined : confidence,
+    predicted_class: cautiousReply ? undefined : predictedClass,
+    confidence: knownTheme || Boolean(cautiousReply) ? undefined : confidence,
     is_high_risk: false, // Only independent explicit cues trigger crisis layout.
     is_ood: predictedClass === "OOD",
     latency_ms: performance.now() - t0,
