@@ -16,7 +16,7 @@ export type IntentRoute = {
   topic?: string;
 };
 
-const idWords = /\b(aku|saya|gue|gw|kamu|tolong|bantu|nggak|enggak|gak|tidak|kenapa|bagaimana|gimana|harus|sudah|udah|makasih|terima kasih|cemas|sedih|perasaan|pikiran|stres|takut|konselor|psikolog|dokter)\b/i;
+const idWords = /\b(aku|saya|gue|gw|kamu|tolong|bantu|nggak|enggak|gak|tidak|kenapa|bagaimana|gimana|harus|sudah|udah|makasih|terima kasih|cemas|sedih|perasaan|pikiran|stres|takut|konselor|psikolog|dokter|bukan|itu|maksudku|nyambung|jawabannya|cara|mengatasi|depresi|gangguan|pengobatan|oke)\b/i;
 const languageOf = (text: string, previous = "") => idWords.test(text) || (text.trim().split(/\s+/).length <= 6 && idWords.test(previous)) ? "id" : "en";
 
 const correction = /\b(kamu (?:salah|keliru)|bukan itu(?: maksudku)?|jawaban(?:mu)? (?:nggak|gak|tidak) nyambung|nggak nyambung|gak nyambung|you (?:got it wrong|misunderstood)|that's not what i meant|not what i meant|that doesn't answer|you are not listening)\b/i;
