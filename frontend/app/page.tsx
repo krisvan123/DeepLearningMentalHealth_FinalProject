@@ -150,7 +150,7 @@ export default function Home() {
     : "unavailable";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white text-mono-900 font-sans">
+    <div className="flex h-screen h-[100dvh] min-h-0 w-full overflow-hidden bg-white text-mono-900 font-sans">
       {/* Sidebar Component */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -162,7 +162,7 @@ export default function Home() {
       />
 
       {/* Main Chat Interface */}
-      <div className="flex-1 flex flex-col h-full lg:pl-[300px] overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full lg:pl-[300px] overflow-hidden">
         {/* Header */}
         <header className="flex items-center justify-between px-5 sm:px-8 py-3.5 border-b border-mono-200 bg-white/95 backdrop-blur-sm z-10 shrink-0">
           <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ export default function Home() {
         </header>
 
         {/* Scrollable Chat Area and Anchored Input */}
-        <main className="flex-1 flex flex-col overflow-hidden w-full relative">
+        <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden w-full relative">
           <ChatWindow
             messages={messages}
             onSelectPrompt={handleSendMessage}
@@ -195,7 +195,7 @@ export default function Home() {
           />
 
           {/* Sticky Bottom Input Area */}
-          <div className="border-t border-mono-200 bg-white/95 backdrop-blur-sm z-10 shrink-0">
+          <div className="border-t border-mono-200 bg-white/95 backdrop-blur-sm z-10 shrink-0 max-h-[40dvh] overflow-y-auto">
             <div className="max-w-[850px] w-full mx-auto px-4 sm:px-8 py-3.5 sm:py-4">
               <ChatInput
                 onSendMessage={handleSendMessage}
