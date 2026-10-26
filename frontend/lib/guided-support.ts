@@ -447,7 +447,7 @@ export function positiveCheckinReply(message: string): string | null {
   if (/^(?:aku|saya|gue|gw)\s+(?:(?:akhirnya\s+)?lulus\s+(?:ujian|tes|wawancara|interview)|(?:senang|bahagia|gembira)(?:\s+banget)?(?:\s+hari ini)?|berhasil\s+menyelesaikan\s+(?:tugas|ujian))\b/i.test(text)) {
     return "Wah, terima kasih sudah berbagi kabar baik itu! Apa bagian yang paling membuatmu senang?";
   }
-  if (/^(?:i|we)\s+(?:passed\s+(?:my|the)\s+(?:exam|test|interview)|(?:feel|am)\s+(?:really\s+)?(?:happy|great|excited)(?:\s+today)?|got\s+accepted)\b/i.test(text)) {
+  if (/^(?:(?:i|we)\s+(?:passed\s+(?:my|the)\s+(?:exam|test|interview)|(?:feel|am)\s+(?:really\s+)?(?:happy|great|excited)(?:\s+today)?|got\s+accepted)|i(?:'m| am)\s+doing\s+(?:really\s+)?(?:great|good|well|fine)(?:\s+today)?|i\s+feel\s+(?:really\s+)?good(?:\s+today)?)\b/i.test(text)) {
     return "That's good news! Thanks for sharing it. What part of today are you most pleased about?";
   }
   return null;
