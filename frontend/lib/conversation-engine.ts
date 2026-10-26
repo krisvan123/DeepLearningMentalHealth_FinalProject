@@ -23,11 +23,13 @@ const correction = /\b(kamu (?:salah|keliru)|bukan itu(?: maksudku)?|jawaban(?:m
 const listening = /\b(jangan (?:kasih|beri|ngasih) (?:saran|solusi)|cuma (?:mau|pengen|ingin) (?:cerita|curhat|didengerin)|aku (?:mau|pengen|ingin) (?:curhat|cerita aja|didengar)|just (?:want|need) (?:to vent|someone to listen|you to listen)|don't (?:give|want) advice|no advice)\b/i;
 const thanks = /^(?:terima kasih|makasih|makasi|thanks|thank you|thx)(?:\s+(?:ya|banget|so much|a lot))?[.! ]*$/i;
 const diagnosisRequest = /\b(apakah aku (?:punya|mengalami|kena|terkena|mengidap)|apa aku (?:depresi|bipolar|anxiety|gangguan)|diagnos(?:e|is|ed)|do i have|am i (?:depressed|bipolar)|is this (?:depression|anxiety|a disorder)|what (?:disorder|illness) do i have|gangguan mental apa)\b/i;
-const treatmentRequest = /\b(cara (?:mengobati|sembuh dari|penanganan|menangani)|(?:obat|pengobatan|terapi) (?:untuk|buat)|how (?:do i treat|to treat|is .* treated)|treatment for|can (?:depression|anxiety|bipolar|mental illness) be treated|bagaimana (?:cara )?mengatasi (?:depresi|gangguan mental))\b/i;
+const treatmentRequest = /\b(?:(?:cara|bagaimana cara) (?:mengobati|menangani|mengatasi) (?:depresi|cemas|anxiety|stres|gangguan mental|gangguan makan|kecanduan)|(?:obat|pengobatan|terapi|penanganan) (?:untuk|buat) (?:depresi|cemas|anxiety|stres|gangguan mental|gangguan makan|kecanduan)|(?:how to treat|treatment for|how is) (?:depression|anxiety|panic|eating disorder|mental illness|addiction)|can (?:depression|anxiety|bipolar|mental illness) be treated)\b/i;
 const askHelp = /\b(tolong|bantu|butuh saran|kasih solusi|berikan solusi|apa yang harus|harus gimana|gimana caranya|what should i do|need advice|any advice|help me|can you help|how can i cope)\b/i;
 const rejectSuggestion = /\b(udah|sudah|telah|already|i tried|i've tried|didn't work|doesn't work|didn't help|gak membantu|nggak membantu|tidak membantu|masih sulit|belum berhasil)\b/i;
 const greetingsOnly = /^(?:iya|ya|oke|ok|okay|yes|sure|baik|lanjut|tell me more|go on|terus|next)[!?.\s]*$/i;
 const simpleEmotion = /^(?:(?:aku|saya|gue|gw|i(?:'m| am)?)\s+)?(?:capek|lelah|sedih|takut|cemas|bingung|marah|kesal|bosan|tired|sad|upset|afraid|confused|exhausted|fine|okay|not okay)(?:\s+(?:banget|sekali|hari ini|today|lately|right now))?[.! ]*$/i;
+const generalKnowledge = /^(?:what is (?:python|machine learning|the capital|the weather|an algorithm)|who is the |berapa (?:ibukota|hasil|cuaca)|apa (?:itu python|ibu kota)|write (?:code|a program)|buatkan (?:kode|program))\b/i;
+const positiveOrdinary = /^(?:i (?:love|like) (?:food|music|movies|my family)|i slept well|today i (?:went to|had|visited)|aku (?:suka|senang) (?:makanan|musik|film)|aku tidur nyenyak|hari ini aku (?:pergi|makan|belajar))\b/i;
 const explicitUncertainty = /\b(aku (?:bingung|tidak tahu) harus|i don't know what to do|aku butuh bantuan|i need help)\b/i;
 
 // Recognize symptom topics without using their label as a diagnosis.
@@ -95,6 +97,17 @@ export function routeConversation(
 
   const social = socialOpeningReply(current) || positiveCheckinReply(current);
   if (social) return { method: "social", response: social };
+
+  if (generalKnowledge.test(current)) {
+    return { method: "clarify", topic: "Out of scope", response: id
+      ? "MindCare lebih cocok untuk membahas perasaan dan situasi yang kamu hadapi, bukan menjawab pertanyaan pengetahuan umum. Ada hal yang ingin kamu ceritakan?"
+      : "MindCare is designed for emotional reflection, not general-knowledge questions. Is there something you'd like to talk through?" };
+  }
+  if (positiveOrdinary.test(current)) {
+    return { method: "social", topic: "Everyday conversation", response: id
+      ? "Oh, menarik! Mau cerita sedikit tentang harimu atau ada hal tertentu yang lagi kamu pikirkan?"
+      : "That sounds nice! Would you like to share a little more about your day?" };
+  }
 
   if (thanks.test(current)) {
     return { method: "social", response: id
