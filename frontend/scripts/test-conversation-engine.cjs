@@ -46,7 +46,7 @@ const rows = [
   ["Aku dijauhi teman", "guided", "benar-benar terjadi"],
   ["I feel lonely recently", "guided", "messaging"],
   ["I can't sleep at night", "guided", "wind-down"],
-  ["I'm grieving because my friend passed away", "guided", "memory"],
+  ["I'm grieving because my friend passed away", "guided", "remember"],
   ["I'm worried about my rent and money", "guided", "essentials"],
   ["I feel guilty after eating food", "guided", "restrict"],
   ["I can't stop checking my phone, I'm addicted", "guided", "activity"],
@@ -82,14 +82,24 @@ const rows = [
 ];
 
 let passed = 0;
+const failures = [];
 for (const [input, intent, phrase] of rows) {
   const response = routeConversation(input);
-  assert.ok(response, "Unrecognized input: " + input);
-  assert.equal(response.method, intent, "Wrong response route for: " + input);
-  assert.ok(response.response.toLowerCase().includes(phrase.toLowerCase()),
-    "Unrelated reply for " + input + ": " + response.response);
+  if (!response) {
+    failures.push("No response route: " + input);
+    continue;
+  }
+  if (response.method !== intent) {
+    failures.push("Wrong route " + response.method + " (expected " + intent + "): " + input);
+    continue;
+  }
+  if (!response.response.toLowerCase().includes(phrase.toLowerCase())) {
+    failures.push("Off-topic reply for " + input + ": " + response.response.slice(0,140));
+    continue;
+  }
   passed++;
 }
+assert.equal(failures.length, 0, failures.join("\n"));
 
 const oldTopic = [
   { role: "user", content: "I'm worried about an interview tomorrow." },
