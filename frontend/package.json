@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prebuild": "node scripts/copy-onnx-runtime.cjs",
+    "predev": "node scripts/copy-onnx-runtime.cjs",
+    "test": "node scripts/test-conversation-intents.cjs && node scripts/test-guided-support.cjs && node scripts/test-conversation-engine.cjs && node scripts/test-demo-readiness.cjs && node scripts/verify_model.cjs && node scripts/test-research-pages.cjs"
   },
   "dependencies": {
+    "@huggingface/transformers": "3.8.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.428.0",
-    "@tensorflow/tfjs": "^4.22.0",
     "next": "^14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

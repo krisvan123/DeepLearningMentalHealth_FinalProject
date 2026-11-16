@@ -31,11 +31,11 @@ export default function Home() {
           status: "unavailable",
           model_ready: false,
           model_error: "Browser model could not load",
-          architecture: "Bi-LSTM",
+          architecture: "BERT Transformer",
           task: "Multi-class Classification",
-          num_classes: 8,
+          num_classes: 4,
           classes: [],
-          confidence_threshold: 0.35,
+          confidence_threshold: 0.55,
         });
       }
     }

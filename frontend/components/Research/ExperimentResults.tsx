@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import spec from "@/lib/model-spec.json";
 
 type ModelResult = {
   parameters: number;
@@ -15,7 +16,8 @@ type ModelResult = {
 type Evidence = {
   class_labels: string[];
   generated_at: string;
-  models: { LSTM_baseline: ModelResult; BiLSTM: ModelResult };
+  models: { Transformer: ModelResult };
+  checkpoint_sha256: string;
   samples: { train:number; validation:number; test:number };
 };
 
@@ -63,12 +65,12 @@ export function ExperimentResults(){
   const [state,setState]=useState<"loading"|"missing"|"ready">("loading");
   useEffect(()=>{
     let canceled=false;
-    fetch("/research/model_comparison.json",{cache:"no-store"}).then(async response=>{
+    fetch("/research/transformer.json",{cache:"no-store"}).then(async response=>{
       if(!response.ok)throw new Error("Unavailable");
       const data=await response.json() as Evidence;
-      if(!data?.models?.LSTM_baseline?.holdout ||
-         !data?.models?.BiLSTM?.holdout || !Array.isArray(data.class_labels) ||
-         data.class_labels.length!==8) throw new Error("Incomplete");
+      if(!data?.models?.Transformer?.holdout ||
+         JSON.stringify(data.class_labels)!==JSON.stringify(spec.classes) ||
+         data.checkpoint_sha256!==spec.checkpoint_sha256) throw new Error("Incomplete or stale experiment");
       if(!canceled){setEvidence(data);setState("ready");}
     }).catch(()=>{if(!canceled)setState("missing");});
     return ()=>{canceled=true;};
@@ -76,12 +78,11 @@ export function ExperimentResults(){
   if(state!=="ready" || !evidence){
     return <div className="border border-mono-200 rounded-xl p-4 text-sm text-mono-600">
       {state==="loading"?"Checking published experiment evidence…":
-        "Baseline-vs-Bi-LSTM holdout comparison is not yet published. Verified dataset permissions and a real executed experiment are required."}
+        "No verified result for the currently deployed Transformer checkpoint is available."}
     </div>;
   }
   const models:[string,ModelResult][]=[
-    ["Unidirectional LSTM",evidence.models.LSTM_baseline],
-    ["Bidirectional LSTM",evidence.models.BiLSTM]
+    ["Fine-tuned BERT Transformer",evidence.models.Transformer]
   ];
   return <div className="space-y-4">
     <p className="text-xs text-mono-600">Actual experiment file generated {new Date(evidence.generated_at).toLocaleDateString()}; train/validation/test: {evidence.samples.train}/{evidence.samples.validation}/{evidence.samples.test}. These results are research classification metrics, never a clinical validation.</p>

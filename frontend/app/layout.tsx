@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MINDCARE — Mental Health Support Assistant",
@@ -17,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-white text-mono-900`}>
+      <body className="font-sans min-h-screen bg-white text-mono-900">
         {children}
       </body>
     </html>

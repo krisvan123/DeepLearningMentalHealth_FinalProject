@@ -1,3 +1,5 @@
+> Historical Bi-LSTM documentation, superseded by the current README and Transformer report.
+
 # MindCare response-quality remediation (2026-10-25)
 
 MindCare remains an **academic classification + controlled-response prototype**. It

@@ -1,38 +1,23 @@
-/**
- * Sanity-check converted model using the SAME pure-JS TensorFlow.js engine
- * that browsers use. Fails CI before any converted weights are published.
- */
-const fs = require("node:fs");
-const path = require("node:path");
-const tf = require("@tensorflow/tfjs");
-
-async function main() {
-  const root = path.join(__dirname, "..", "public", "mindcare-model");
-  const artifact = JSON.parse(fs.readFileSync(path.join(root, "model.json"), "utf8"));
-  const config = JSON.parse(fs.readFileSync(path.join(root, "runtime.json"), "utf8"));
-  const manifest = artifact.weightsManifest;
-  if (!manifest || manifest.length === 0) throw new Error("No weight manifest");
-  const specs = manifest.flatMap((entry) => entry.weights);
-  const chunks = manifest.flatMap((entry) =>
-    entry.paths.map((file) => fs.readFileSync(path.join(root, file)))
-  );
-  const data = Buffer.concat(chunks);
-  const bytes = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-  const handler = tf.io.fromMemory({
-    modelTopology: artifact.modelTopology,
-    weightSpecs: specs,
-    weightData: bytes,
-  });
-  const model = await tf.loadLayersModel(handler);
-  const input = tf.tensor2d([new Array(config.max_length).fill(0)], [1, config.max_length], "int32");
-  const output = model.predict(input);
-  const scores = Array.from(await output.data());
-  if (scores.length !== config.classes.length || !scores.every(Number.isFinite)) {
-    throw new Error("Inference returned invalid probabilities");
-  }
-  console.log("TensorFlow.js inference OK:", scores.length, "categories; sum", scores.reduce((a,b)=>a+b,0));
-  input.dispose();
-  output.dispose();
-  model.dispose();
-}
-main().catch((err) => { console.error(err); process.exitCode = 1; });
+/** Real exported Transformer inference in the Node CPU runtime; no remote models. */
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const fs = require('node:fs');
+(async () => {
+  const {env, AutoTokenizer, AutoModelForSequenceClassification} = await import('@huggingface/transformers');
+  env.allowRemoteModels = false;
+  env.localModelPath = path.resolve(__dirname, '../public/models') + '/';
+  const spec = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../lib/model-spec.json'),'utf8'));
+  const tokenizer = await AutoTokenizer.from_pretrained('mindcare-transformer');
+  const model = await AutoModelForSequenceClassification.from_pretrained('mindcare-transformer',{dtype:'fp32',device:'cpu'});
+  try {
+    for (const text of ['Hello.', 'I feel anxious about tomorrow.', 'Today was a quiet day. '.repeat(60)]) {
+      const inputs = tokenizer(text,{truncation:true,max_length:spec.max_length});
+      assert.ok(inputs.input_ids.dims[1] <= spec.max_length);
+      const result = await model(inputs);
+      assert.equal(result.logits.data.length,spec.classes.length);
+      assert.ok(Array.from(result.logits.data).every(Number.isFinite));
+    }
+    assert.deepEqual(spec.classes.map((_,i)=>model.config.id2label[i]),spec.classes);
+    console.log('Real ONNX Transformer inference passed for short, normal and truncated inputs.');
+  } finally { await model.dispose(); }
+})().catch(error=>{console.error(error);process.exitCode=1;});

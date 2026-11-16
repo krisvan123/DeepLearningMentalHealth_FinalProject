@@ -1,7 +1,7 @@
 /**
  * MindCare response routing — transparent, offline, non-clinical.
  *
- * This module does NOT diagnose or provide treatment. The Bi-LSTM remains a
+ * This module does NOT diagnose or provide treatment. The Transformer remains a
  * separate academic classifier. Intent rules are conservative: when a message
  * is ambiguous, ask the person to clarify rather than guess a disorder.
  * No messages leave the device.
@@ -92,8 +92,8 @@ export function routeConversation(
     return {
       method: "support", topic: "Understanding mental health",
       response: id
-        ? "Aku tidak bisa menentukan diagnosis lewat chat atau skor Bi-LSTM. Kalau gejalanya menetap atau mengganggu aktivitas, psikolog atau dokter dapat membantu menilai situasinya. Kamu bisa mulai dengan mencatat kapan perasaan itu muncul, seberapa sering, dan dampaknya pada keseharian. Mau ceritakan yang paling mengganggu?"
-        : "I can't diagnose a condition from chat messages or a Bi-LSTM score. If symptoms persist or affect daily life, a qualified mental-health professional can assess what's happening. You could note when the feelings started, how often they occur, and how daily life is affected. What concerns you most?",
+        ? "Aku tidak bisa menentukan diagnosis lewat chat atau skor Transformer. Kalau gejalanya menetap atau mengganggu aktivitas, psikolog atau dokter dapat membantu menilai situasinya. Kamu bisa mulai dengan mencatat kapan perasaan itu muncul, seberapa sering, dan dampaknya pada keseharian. Mau ceritakan yang paling mengganggu?"
+        : "I can't diagnose a condition from chat messages or a Transformer score. If symptoms persist or affect daily life, a qualified mental-health professional can assess what's happening. You could note when the feelings started, how often they occur, and how daily life is affected. What concerns you most?",
     };
   }
   if (existingDiagnosis.test(current)) {

@@ -1,80 +1,80 @@
-"""Export existing trained Keras Bi-LSTM and tokenizer as static browser assets.
-
-Run in GitHub Actions; source .h5 / tokenizer.pickle remain the authoritative
-artifacts. Do NOT generate a new random model if loading or conversion fails.
-"""
-from __future__ import annotations
-
+"""Export the trained Transformer to ONNX and verify PyTorch/ONNX parity."""
+import argparse
 import json
-import pickle
+import shutil
 from pathlib import Path
+import numpy as np
+import onnx
+import onnxruntime as ort
+import torch
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from scripts.prepare_dataset import LABELS, sha256
 
-import tensorflow as tf
-import tensorflowjs as tfjs
-
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "frontend" / "public" / "mindcare-model"
-MODEL = ROOT / "models" / "model_final.h5"
-TOKENIZER = ROOT / "models" / "tokenizer.pickle"
-METADATA = ROOT / "models" / "model_metadata.json"
+BASE = Path(__file__).resolve().parents[1]
 
 
-def main() -> None:
-    if not all(x.is_file() for x in (MODEL, TOKENIZER, METADATA)):
-        raise FileNotFoundError("Original weights, tokenizer and metadata are required")
-    OUT.mkdir(parents=True, exist_ok=True)
+class LogitsOnly(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
 
-    with METADATA.open(encoding="utf-8") as file:
-        metadata = json.load(file)
-    with TOKENIZER.open("rb") as file:
-        tokenizer = pickle.load(file)
+    def forward(self, input_ids, attention_mask, token_type_ids):
+        return self.model(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids).logits
 
-    network = tf.keras.models.load_model(str(MODEL), compile=False)
-    tfjs.converters.save_keras_model(network, str(OUT))
-    labels = metadata["class_labels"]
-    if network.output_shape[-1] != len(labels):
-        raise ValueError("Model output class count mismatches metadata labels")
-    word_index = tokenizer.word_index
-    vocab_limit = int(tokenizer.num_words or metadata.get("max_vocab_size", 15000))
-    vocabulary = {word: idx for word, idx in word_index.items() if idx < vocab_limit}
-    oov_index = word_index.get(tokenizer.oov_token or "", 1)
 
-    responses = {}
-    files = {
-        "Addiction": "addiction.txt",
-        "Anxiety": "anxiety.txt",
-        "Depression": "depression.txt",
-        "Eating Disorder": "eating_disorder.txt",
-        "Suicide": "suicide.txt",
-        "Neutral": "neutral.txt",
-        "OOD": "ood.txt",
-        "Greeting": "greeting.txt",
-    }
-    for category, path in files.items():
-        content = (ROOT / "respon" / path).read_text(encoding="utf-8")
-        responses[category] = [x.strip() for x in content.split("---") if x.strip()]
-        if not responses[category]:
-            raise ValueError(f"No responses configured for {category}")
-
-    config = {
-        "classes": labels,
-        "threshold": float(metadata.get("confidence_threshold", 0.35)),
-        "max_length": int(metadata.get("max_sequence_length", 100)),
-        "num_words": vocab_limit,
-        "filters": tokenizer.filters,
-        "split": tokenizer.split,
-        "lower": bool(tokenizer.lower),
-        "oov_index": int(oov_index),
-        "word_index": vocabulary,
-        "responses": responses,
-    }
-    (OUT / "runtime.json").write_text(
-        json.dumps(config, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
-    )
-    print(
-        f"Exported {len(labels)} classes and {len(vocabulary)} tokenizer entries; "
-        f"assets: {[p.name for p in OUT.iterdir()]}"
-    )
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", type=Path, default=BASE / "models/transformer")
+    parser.add_argument("--output", type=Path, default=BASE / "frontend/public/models/mindcare-transformer")
+    args = parser.parse_args()
+    torch.set_num_threads(2)
+    report = json.loads((args.model / "training_report.json").read_text())
+    if sha256(args.model / "model.safetensors") != report["checkpoint_sha256"]:
+        raise ValueError("Weights differ from the evaluated checkpoint")
+    tokenizer = AutoTokenizer.from_pretrained(args.model, local_files_only=True)
+    model = AutoModelForSequenceClassification.from_pretrained(args.model, local_files_only=True,
+                use_safetensors=True, attn_implementation="eager").eval()
+    if [model.config.id2label[i] for i in range(model.config.num_labels)] != LABELS:
+        raise ValueError("Unexpected label order")
+    args.output.mkdir(parents=True, exist_ok=True)
+    (args.output / "onnx").mkdir(exist_ok=True)
+    path = args.output / "onnx/model.onnx"
+    example = tokenizer("I feel nervous about tomorrow.", return_tensors="pt")
+    names = ["input_ids", "attention_mask", "token_type_ids"]
+    torch.onnx.export(LogitsOnly(model).eval(), tuple(example[key] for key in names), str(path),
+                      input_names=names, output_names=["logits"], opset_version=17,
+                      dynamic_axes={**{key: {0: "batch", 1: "sequence"} for key in names}, "logits": {0: "batch"}},
+                      dynamo=False)
+    onnx.checker.check_model(str(path))
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    session = ort.InferenceSession(str(path), sess_options=options, providers=["CPUExecutionProvider"])
+    max_error = 0.0
+    cases = [["Hello."], ["I feel nervous about tomorrow.", "I visited a friend today."],
+             ["A long context sentence. " * 100 + "Latest message."]]
+    for texts in cases:
+        batch = tokenizer(texts, truncation=True, max_length=model.config.mindcare_max_length, padding=True, return_tensors="pt")
+        with torch.inference_mode():
+            reference = model(**batch).logits.numpy()
+        actual = session.run(None, {key: batch[key].numpy() for key in names})[0]
+        np.testing.assert_allclose(reference, actual, rtol=1e-4, atol=1e-4)
+        max_error = max(max_error, float(np.max(np.abs(reference - actual))))
+    for name in ("config.json", "tokenizer.json", "tokenizer_config.json", "special_tokens_map.json", "vocab.txt", "LICENSE"):
+        if (args.model / name).is_file():
+            shutil.copy2(args.model / name, args.output / name)
+    # Controlled responses are data, not generative model output.
+    from response.response_loader import ResponseLoader
+    loader = ResponseLoader()
+    responses = {label: loader.get_responses_for_class(label) for label in ["Anxiety", "Depression", "Neutral", "Suicide", "Greeting", "OOD"]}
+    runtime = {"classes": LABELS, "threshold": model.config.mindcare_threshold,
+               "max_length": model.config.mindcare_max_length, "language": "en", "responses": responses,
+               "checkpoint_sha256": report["checkpoint_sha256"], "onnx_sha256": sha256(path),
+               "parity_max_absolute_error": max_error, "parity_cases": sum(map(len, cases))}
+    (args.output / "runtime.json").write_text(json.dumps(runtime, indent=2) + "\n")
+    spec = {key: runtime[key] for key in ("classes", "threshold", "max_length", "language", "checkpoint_sha256")}
+    spec["architecture"] = "BERT Transformer (2 layers, 128 hidden units)"
+    (BASE / "frontend/lib/model-spec.json").write_text(json.dumps(spec, indent=2) + "\n")
+    print(json.dumps({"onnx_bytes": path.stat().st_size, "maximum_logit_error": max_error}, indent=2))
 
 
 if __name__ == "__main__":

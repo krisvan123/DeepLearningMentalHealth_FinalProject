@@ -1,71 +1,45 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project": "MindCare",
-  "ethics_note": "Dataset source rights are unverified. Never commit raw sensitive user text.",
-  "entries": [
+  "dataset": "ourafla/Mental-Health_Text-Classification_Dataset",
+  "revision": "e47ef4f68a0d28d9f174cb8af2323400b14f1a73",
+  "source_url": "https://huggingface.co/datasets/ourafla/Mental-Health_Text-Classification_Dataset/tree/e47ef4f68a0d28d9f174cb8af2323400b14f1a73",
+  "language": "en",
+  "labels": [
+    "Anxiety",
+    "Depression",
+    "Normal",
+    "Suicidal"
+  ],
+  "license": {
+    "declared": "CC-BY-4.0",
+    "evidence_url": "https://huggingface.co/datasets/ourafla/Mental-Health_Text-Classification_Dataset/blob/e47ef4f68a0d28d9f174cb8af2323400b14f1a73/README.md",
+    "verification": "Publisher declaration inspected; original collection consent and upstream rights were not independently audited."
+  },
+  "attribution": "Mukherjee, P. (2025). Mental Health Text Classification Dataset (4-Class), published as ourafla on Hugging Face. Cite original sources below as requested by its dataset card.",
+  "upstream_sources": [
     {
-      "label": "Addiction",
-      "path": "dataset_chat/FullAddiction.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
+      "title": "Suicide and Depression Detection \u2014 Nikhileswar Komati",
+      "url": "https://www.kaggle.com/datasets/nikhileswarkomati/suicide-watch"
     },
     {
-      "label": "Anxiety",
-      "path": "dataset_chat/FullAnxiety.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
+      "title": "Sentiment Analysis for Mental Health \u2014 Suchintika Sarkar",
+      "url": "https://www.kaggle.com/datasets/suchintikasarkar/sentiment-analysis-for-mental-health"
     },
     {
-      "label": "Depression",
-      "path": "dataset_chat/FullDepression.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
-    },
-    {
-      "label": "Eating Disorder",
-      "path": "dataset_chat/FullEatingDisorder.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
-    },
-    {
-      "label": "Suicide",
-      "path": "dataset_chat/FullSuicide.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
-    },
-    {
-      "label": "Neutral",
-      "path": "daily_chat/train.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
-    },
-    {
-      "label": "Greeting",
-      "path": "daily_chat/train.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
-    },
-    {
-      "label": "OOD",
-      "path": "worng_context/train.csv",
-      "source_url": null,
-      "license_or_permission": null,
-      "permission_status": "unverified",
-      "notes": "Actual dataset origin and rights not verified."
+      "title": "Detection and Classification of Mental Illnesses on Social Media using RoBERTa \u2014 Murarka et al.",
+      "url": "https://github.com/amurark/mental-health-detection"
     }
+  ],
+  "preparation": "Pinned CSV downloads; normalized exact deduplication; conflicts removed from all splits; published test reserved; matching training texts removed; 15% of remaining training pool stratified into validation. Raw posts stay in ignored data/.",
+  "observed_source_rows": {
+    "train": 49612,
+    "test": 992
+  },
+  "limitations": [
+    "The card reports 48,945 training rows, but the pinned CSV actually contains 49,612. The script records observed counts rather than copying the card.",
+    "Source-defined nonclinical labels; no author IDs to verify grouped splits.",
+    "Exact deduplication does not eliminate near-duplicate or source-domain bias.",
+    "English only; no claim of Indonesian classification performance."
   ]
 }

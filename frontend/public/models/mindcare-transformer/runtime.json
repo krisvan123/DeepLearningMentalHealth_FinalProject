@@ -1,0 +1,45 @@
+{
+  "classes": [
+    "Anxiety",
+    "Depression",
+    "Normal",
+    "Suicidal"
+  ],
+  "threshold": 0.55,
+  "max_length": 128,
+  "language": "en",
+  "responses": {
+    "Anxiety": [
+      "Thank you for sharing this. It sounds like something has been weighing on your mind. If it helps, we can focus on just one concern at a time. What's been the most difficult part today?",
+      "It sounds like uncertainty has been uncomfortable lately. You don't have to explain everything at once. What situation would you most like to talk through?",
+      "I hear that this feels overwhelming. If you are somewhere comfortable, taking a short pause may help you collect your thoughts. Would you like to describe what led up to this feeling?"
+    ],
+    "Depression": [
+      "Thank you for sharing something difficult. I don't want to assume exactly what you're going through. What has felt especially heavy or tiring lately?",
+      "It sounds as though things may not have been easy recently. You deserve to be heard without judgment. Is there a particular event or feeling you want to start with?",
+      "I appreciate you opening up. If these feelings are persistent or interfere with everyday life, speaking with a qualified professional or trusted person can be helpful. What's been on your mind today?"
+    ],
+    "Neutral": [
+      "Thank you for sharing your reflection. It sounds like you are processing everyday events and thoughts. While this does not indicate an acute emotional distress, having a quiet space to organize what is happening around you is always valuable. Feel free to continue sharing whatever else is on your mind.",
+      "I appreciate you taking the time to share that. Reflecting on everyday routines and circumstances helps keep things in perspective. Is there any particular aspect of this you would like to explore or focus on?",
+      "I hear you. Everyday experiences, thoughts, and conversations shape our days in subtle ways. I am here to listen whenever you want to express how things are going or if any deeper feelings come up."
+    ],
+    "Suicide": [
+      "Thank you for reaching out. MindCare is an academic prototype and cannot replace support from a person. If you feel unsafe right now, please contact local emergency services or someone you trust who can stay with you.\n\nFor additional emotional support:\n- Indonesia: Healing119.id, phone 119 extension 8, or visit https://www.healing119.id\n- US & Canada: Call or text 988\n- Elsewhere: https://findahelpline.com for country-specific support\n\nYou deserve timely, compassionate help."
+    ],
+    "Greeting": [
+      "Hello. I am MindCare, a Deep Learning-based mental health text classification assistant. I am here to provide a safe, calm space for you to express what is on your mind. You do not need to phrase things perfectly\u2014feel free to share whatever you are experiencing or feeling today.",
+      "Greetings. Welcome to MindCare. I am here to listen and help reflect on your thoughts in a structured, supportive environment. Whenever you are ready, please share what is on your mind.",
+      "Hello. Thank you for connecting. This is a quiet, non-judgmental space designed to help you express your thoughts and emotional reflections. Take your time, and start wherever feels most natural for you."
+    ],
+    "OOD": [
+      "It seems your message falls outside the primary scope of mental health and emotional reflection (such as factual trivia, commercial topics, or general news). MindCare is specifically dedicated to supporting personal mental health reflections and emotional well-being. If you are experiencing stress, anxiety, sadness, or want to share personal reflections, please feel free to tell me more about how you are feeling.",
+      "Thank you for your message. MindCare is an academic text classification assistant specialized in emotional and mental health contexts. I may not be able to assist with topics outside of wellness, personal thoughts, or emotional support. If there is something personal or emotional on your mind, I am here to listen.",
+      "I noticed your input appears to be about a topic outside of our mental wellness scope. To make our conversation as supportive as possible, I focus on personal reflections, emotional states, and well-being. Please feel free to share what is on your mind emotionally."
+    ]
+  },
+  "checkpoint_sha256": "b629b75679fed7d2e3adb4fd45ab12a47ed07055d4729ff91e59ffa5981b20dc",
+  "onnx_sha256": "0c96d321191132ed06d15ac69c96c1c61ab468c5b0a5e0ea6c6edecc148ce849",
+  "parity_max_absolute_error": 1.430511474609375e-06,
+  "parity_cases": 4
+}
