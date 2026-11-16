@@ -1,3 +1,5 @@
+> Historical Bi-LSTM documentation, superseded by the current README and Transformer report.
+
 # MindCare — Response Quality v2 (October 2026)
 
 MindCare remains a **Deep Learning classification research prototype**.

@@ -142,7 +142,7 @@ const DeveloperCard: React.FC<{ message: Message }> = ({ message }) => {
           <span className="text-mono-500">Response Method:</span>
           <span className="font-medium text-right">
             {message.response_source === "guided" ? "Topic-guided coping suggestions"
-              : message.response_source === "model" ? "Bi-LSTM + controlled response"
+              : message.response_source === "model" ? "Transformer + controlled response"
               : message.response_source === "social" ? "Social / everyday response"
               : message.response_source === "support" ? "Non-clinical support information"
               : message.response_source === "clarify" ? "Context clarification"

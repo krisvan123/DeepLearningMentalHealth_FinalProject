@@ -1,3 +1,5 @@
+> Historical Bi-LSTM documentation, superseded by the current README and Transformer report.
+
 # MindCare without LocalTunnel (Vercel)
 
 The public Next.js chat now executes the **original converted Keras Bi-LSTM** in

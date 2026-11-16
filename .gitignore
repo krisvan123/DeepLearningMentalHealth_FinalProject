@@ -47,3 +47,10 @@ ehthumbs.db
 *.log
 tmp/
 scratch/
+.cache/
+.pytest_cache/
+data/
+*.part
+frontend/public/onnx/
+models/transformer-full/
+*.tsbuildinfo

@@ -7,9 +7,9 @@ interface ModelStatusProps {
 }
 
 export const ModelStatus: React.FC<ModelStatusProps> = ({ status }) => {
-  const archDisplay = status?.architecture?.includes("Bi-LSTM")
-    ? "Bi-LSTM"
-    : status?.architecture || "Bi-LSTM";
+  const archDisplay = status?.architecture?.includes("BERT Transformer")
+    ? "BERT Transformer"
+    : status?.architecture || "BERT Transformer";
 
   const taskDisplay = status?.task?.includes("Multi-class")
     ? "Multi-class"
@@ -28,21 +28,21 @@ export const ModelStatus: React.FC<ModelStatusProps> = ({ status }) => {
       <div className="flex justify-between items-baseline text-xs pb-1.5 border-b border-mono-200">
         <span className="text-mono-500">Classes</span>
         <span className="font-semibold text-mono-900 text-right">
-          {status?.num_classes || 8} Categories
+          {status?.num_classes || 4} Categories
         </span>
       </div>
       <div className="flex justify-between items-baseline text-xs pb-1.5 border-b border-mono-200">
         <span className="text-mono-500">Inference</span>
         <span className="font-semibold text-mono-900 text-right">
-          {status?.model_ready ? "On-device TensorFlow.js" : "Model not loaded"}
+          {status?.model_ready ? "On-device Transformer" : "Model not loaded"}
         </span>
       </div>
       <div className="flex justify-between items-baseline text-xs pb-1.5 border-b border-mono-200">
-        <span className="text-mono-500">OOD Threshold</span>
+        <span className="text-mono-500">Abstention threshold</span>
         <span className="font-semibold text-mono-900 text-right">
           {status?.confidence_threshold
             ? `${(status.confidence_threshold * 100).toFixed(0)}%`
-            : "35%"}
+            : "55%"}
         </span>
       </div>
     </div>

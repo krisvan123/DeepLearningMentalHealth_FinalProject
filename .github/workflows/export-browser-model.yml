@@ -1,57 +1,24 @@
-name: Export MindCare model for Vercel browser inference
-
+name: Verify Transformer browser export
 on:
   workflow_dispatch:
   push:
-    branches: [main, "feat/vercel-browser-inference-20261025"]
-    paths:
-      - models/model_final.h5
-      - models/tokenizer.pickle
-      - models/model_metadata.json
-      - scripts/export_browser_model.py
-      - .github/workflows/export-browser-model.yml
-
+    branches: [main]
+    paths: ['models/transformer/**', 'scripts/export_browser_model.py']
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   export-model:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-      - name: Install converter and Keras 2 runtime
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install "tensorflow-cpu==2.15.1" "tensorflowjs==4.17.0"
-      - name: Export verified model assets
-        run: |
-          python scripts/export_browser_model.py
-          test -s frontend/public/mindcare-model/model.json
-          test -s frontend/public/mindcare-model/runtime.json
-      - uses: actions/setup-node@v4
+          python-version: '3.12'
+      - run: pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements-dev.txt
+      - run: python -m scripts.export_browser_model
+      - uses: actions/upload-artifact@v4
         with:
-          node-version: "20"
-      - name: Refresh npm lockfile
-        run: cd frontend && npm install --package-lock-only --ignore-scripts
-      - name: Install browser dependencies and test TFJS model inference
-        run: |
-          cd frontend && npm ci
-          node scripts/verify_model.cjs
-      - name: Commit static model and lockfile artifacts for Vercel
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/public/mindcare-model frontend/package-lock.json
-          if git diff --cached --quiet; then
-            echo "No asset changes"
-          else
-            git commit -m "build: publish browser inference model assets"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push origin "HEAD:$GITHUB_REF_NAME"
-          fi
+          name: verified-transformer-browser-assets
+          path: frontend/public/models/mindcare-transformer

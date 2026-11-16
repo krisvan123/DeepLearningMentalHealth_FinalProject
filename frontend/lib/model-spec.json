@@ -1,0 +1,13 @@
+{
+  "classes": [
+    "Anxiety",
+    "Depression",
+    "Normal",
+    "Suicidal"
+  ],
+  "threshold": 0.55,
+  "max_length": 128,
+  "language": "en",
+  "checkpoint_sha256": "b629b75679fed7d2e3adb4fd45ab12a47ed07055d4729ff91e59ffa5981b20dc",
+  "architecture": "BERT Transformer (2 layers, 128 hidden units)"
+}

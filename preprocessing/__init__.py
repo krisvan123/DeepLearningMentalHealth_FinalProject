@@ -1,11 +1,4 @@
-"""Preprocessing package initialization."""
-
+"""Preprocessing helpers; Transformer inference uses its native tokenizer."""
+from preprocessing.tokenizer import TokenizerWrapper
 from preprocessing.text_preprocessor import TextPreprocessor, preprocess_text
-from preprocessing.tokenizer import TokenizerWrapper, pad_sequence_vector
-
-__all__ = [
-    "TextPreprocessor",
-    "preprocess_text",
-    "TokenizerWrapper",
-    "pad_sequence_vector",
-]
+__all__ = ["TokenizerWrapper", "TextPreprocessor", "preprocess_text"]

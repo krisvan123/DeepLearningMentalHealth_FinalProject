@@ -36,11 +36,11 @@ export default function AnalysisPage() {
         <header className="space-y-3 max-w-3xl">
           <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-mono-500"><Activity className="w-4 h-4" /> Deep Learning Laboratory</div>
           <h1 className="font-bold text-3xl sm:text-4xl tracking-tight">Model Analysis</h1>
-          <p className="text-mono-600 leading-relaxed">Test the exported <strong>8-class Bi-LSTM</strong> directly in your browser. Unlike the chat page, this laboratory always calls the neural network: no greeting or response rules can replace the prediction.</p>
+          <p className="text-mono-600 leading-relaxed">Test the English-language <strong>4-class BERT Transformer</strong> directly in your browser. Unlike the chat page, this laboratory always calls the neural network: no greeting or response rules can replace the prediction.</p>
         </header>
         <form onSubmit={analyze} className="rounded-2xl border border-mono-200 shadow-sm p-4 sm:p-6 space-y-4">
           <label htmlFor="analysis-input" className="block font-semibold text-sm">Text to classify (research only)</label>
-          <textarea id="analysis-input" value={input} onChange={event => {setInput(event.target.value);setResult(null);}} maxLength={2000} rows={4}
+          <textarea id="analysis-input" value={input} onChange={event => {setInput(event.target.value);setResult(null);}} maxLength={4000} rows={4}
             placeholder="Write a sample sentence…" className="w-full rounded-xl border border-mono-300 px-4 py-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-mono-700" />
           <div className="flex gap-2 flex-wrap" aria-label="Test sample sentences">
             {examples.map((example,index)=><button type="button" key={index} onClick={()=>{setInput(example);setResult(null);}}
@@ -49,7 +49,7 @@ export default function AnalysisPage() {
           <button type="submit" disabled={!input.trim()||loading}
             className="inline-flex items-center gap-2 rounded-xl bg-mono-900 text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-40">
             {loading?<Loader2 className="w-4 h-4 animate-spin"/>:<Play className="w-4 h-4"/>}
-            {loading?"Running on-device inference…":"Run Bi-LSTM"}
+            {loading?"Running on-device inference…":"Run Transformer"}
           </button>
           <p className="text-xs text-mono-500">Model weights are downloaded as static files and inference runs on your device. Do not enter identifying or sensitive personal details for a classroom demonstration.</p>
         </form>
@@ -65,7 +65,7 @@ export default function AnalysisPage() {
                 </div>
                 <span className="text-xs rounded-full border border-mono-200 p-2">{result.latencyMs.toFixed(0)} ms inference</span>
               </div>
-              <h3 className="font-semibold text-sm">Eight model output scores</h3>
+              <h3 className="font-semibold text-sm">Four model output scores</h3>
               <div className="space-y-3">
                 {result.scores.map(item=>(
                   <div key={item.label} className="space-y-1">

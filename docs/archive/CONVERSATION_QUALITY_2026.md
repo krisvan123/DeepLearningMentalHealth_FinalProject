@@ -1,3 +1,5 @@
+> Historical Bi-LSTM documentation, superseded by the current README and Transformer report.
+
 # MindCare Context & Safety Quality Upgrade — 26 October 2026
 
 MindCare is an academic on-device, bilingual text-classification and guided-reflection prototype. **It is not psychotherapy, medical treatment, a diagnosis engine, or an emergency-care service.**

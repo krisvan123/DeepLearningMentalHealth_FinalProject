@@ -5,7 +5,7 @@
 export const APP_NAME = "MINDCARE";
 export const APP_SUBTITLE = "Mental Health Support Assistant";
 export const APP_DESCRIPTION =
-  "MindCare is an academic text-classification and guided-reflection prototype. It combines an on-device Bi-LSTM with curated, context-specific responses. It does not diagnose or provide treatment.";
+  "MindCare is an academic text-classification and guided-reflection prototype. It combines an on-device Transformer with curated, context-specific responses. It does not diagnose or provide treatment.";
 
 export const QUICK_PROMPTS = [
   "I'm nervous about my interview tomorrow",
