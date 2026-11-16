@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "node scripts/copy-onnx-runtime.cjs",
     "prebuild": "node scripts/copy-onnx-runtime.cjs",
     "predev": "node scripts/copy-onnx-runtime.cjs",
     "test": "node scripts/test-conversation-intents.cjs && node scripts/test-guided-support.cjs && node scripts/test-conversation-engine.cjs && node scripts/test-demo-readiness.cjs && node scripts/verify_model.cjs && node scripts/test-research-pages.cjs"
